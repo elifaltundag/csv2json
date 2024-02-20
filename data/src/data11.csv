@@ -1,0 +1,11 @@
+ID,FirstName,LastName,Gender,Age,Location,Occupation,Salary
+1,John,Doe,Male,32,New York,Software Engineer,85000
+2,Alice,Smith,Female,28,Los Angeles,Data Scientist,90000
+3,Bob,Johnson,Male,35,Chicago,Marketing Specialist,75000
+4,Eve,Williams,Female,40,San Francisco,Product Manager,100000
+5,Michael,Brown,Male,45,Houston,Financial Analyst,80000
+6,Susan,Anderson,Female,30,Miami,UX Designer,85000
+7,David,Miller,Male,38,Seattle,Project Manager,95000
+8,Emily,Jones,Female,27,Austin,Software Developer,80000
+9,Christopher,Clark,Male,33,Boston,Research Scientist,92000
+10,Sarah,Moore,Female,29,Denver,Graphic Designer,75000
