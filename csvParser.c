@@ -16,6 +16,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 
 	if (*pHasHeaders)
 	{
+		// Buffer header ---------------------------------------------
 		CharArr header;
 		int buffer = bufferHeader(pfInput, &header);
 
@@ -38,30 +39,50 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			return CSV_PARSING_ERROR;
 		}
 
-		for (size_t i = 0; i < *pNumCols; ++i)
+		// Separete header --------------------------------------------
+		// Get each title's length
+		int numChar = 0;
+		for (size_t i = 0; i < header.capacity; ++i)
 		{
-			// TODO NOW: separete header
-			// get each title's length
-			// create dynamic char arrays based on these lengths 
-			// get each title
-			// put its address in pHeaderList
+			if (header.pData[i] != *pDelimiter) numChar++;
+			else {
+				addNewInt(&numHeaderChars, numChar);
+				numChar = 0;
+			}
+
+
+		}
+		addNewInt(&numHeaderChars, numChar);
+		
+		
+		// Create char arrays based on these lengths 
+		// Get each title
+		// Put its address in pHeaderList
+		int numPrevHeader = 0;
+		for (int iHeader = 0; iHeader < *pNumCols; iHeader++)
+		{
+			size_t numChars = (size_t) numHeaderChars.pData[iHeader];
+			
+			CharArr headerArr;
+			createCharArr(&headerArr, numChars);
+			
+			// Get previous headers char nums sum
+			if (iHeader != 0) {
+				numPrevHeader += numHeaderChars.pData[iHeader - 1] + 1;
+			}
+			// numPrevHeader = (iHeader == 0) ? 0 : numHeaderChars.pData[iHeader - 1] + iHeader;
+			
+			// Add each character to header
+			for (int iChar = numPrevHeader; iChar < numChars + numPrevHeader; iChar++)
+			{
+				addNewChar(&headerArr, header.pData[iChar]);
+			}
+
+			// Add CharArr's address to pHeaderList
+			pHeaderList[iHeader] = headerArr.pData;
 		}
 		
 		destroyCharArr(&header);
-		
-
-#if 0
-		IntArr numHeaderLetters;
-		createIntArr(&numHeaderLetters, *pNumCols);
-		setNumHeaderLetters(&numHeaderLetters, pfInput, pDelimiter);
-		// TODO: getNumHeadersLetters
-
-		// setHeaders(pfInput, pHeaderList, pNumCols);
-		// TODO: getHeaders
-
-		destroyIntArr(&numHeaderLetters);
-#endif
-		
 	}
 	
 	if (validateData != SUCCESS)
@@ -84,6 +105,11 @@ int validateData(FILE* pfInput, char* pDelimiter)
 	
 	
 	return CSV_PARSING_ERROR;
+}
+
+void getToFirstNonCommentLine(FILE* pfInput)
+{
+	return;
 }
 
 

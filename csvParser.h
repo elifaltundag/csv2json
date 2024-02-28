@@ -10,3 +10,4 @@ int bufferHeader(FILE* pfInput, CharArr* pArrBufferHeader);
 // Not written yet
 void checkHeaders(FILE* pfInput, bool* pHasHeaders);
 int validateData(FILE* pfInput, char* pDelimiter);
+void getToFirstNonCommentLine(FILE *pfInput);
