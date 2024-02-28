@@ -9,6 +9,6 @@ typedef struct {
 
 void createIntArr(IntArr* pArr, size_t capacity);
 void destroyIntArr(IntArr* pArr);
-void addNewElement(IntArr* pArr, int newElement);
+void addNewInt(IntArr* pArr, int newInt);
 
 #endif

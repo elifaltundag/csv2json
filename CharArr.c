@@ -23,3 +23,14 @@ void destroyCharArr(CharArr* pArr)
 	free(pArr->pData);
 	pArr->pData = NULL;
 }
+
+void addNewChar(CharArr* pArr, char newChar) {
+	if (pArr->size >= pArr->capacity)
+	{
+		printf("ERROR: Character array full capacity!\n");
+		return;
+	}
+
+	pArr->pData[pArr->size] = newChar;
+	pArr->size++;
+}

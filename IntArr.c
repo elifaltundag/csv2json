@@ -24,14 +24,14 @@ void destroyIntArr(IntArr* pArr)
 	pArr->pData = NULL;
 }
 
-void addNewElement(IntArr* pArr, int newElement)
+void addNewInt(IntArr* pArr, int newInt)
 {
 	if (pArr->size >= pArr->capacity)
 	{
-		printf("ERROR: Dynamic integer array full capacity!\n");
+		printf("ERROR: Integer array full capacity!\n");
 		return;
 	}
 
-	pArr->pData[pArr->size] = newElement;
+	pArr->pData[pArr->size] = newInt;
 	pArr->size++;
 }
