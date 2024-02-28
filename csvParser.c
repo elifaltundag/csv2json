@@ -14,22 +14,15 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	determineNumCols(pfInput, pDelimiter, pNumCols);
 	checkHeaders(pfInput, pHasHeaders);
 	
-	if (validateData(pfInput, pDelimiter) != SUCCESS)
+	int dataValidated = validateData(pfInput, pDelimiter);
+	if (dataValidated != SUCCESS)
 	{
-		// -----------------------------------------------------------
-		// TODO NEXT
-		// 
-		// Get each data type: String || Number
-		// Do all entries match these data types or null?
-		// 
-		// Incorrect comma count per entry 
-		// 
-		// Are there any comment lines?
-		// -----------------------------------------------------------
-		
 		return CSV_PARSING_ERROR;
 	}
 
+	// -----------------------------------------------------------
+	// Save each header if the CSV file has headers
+	// -----------------------------------------------------------
 	if (*pHasHeaders)
 	{
 		// Buffer headers ---------------------------------------------
@@ -103,17 +96,60 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	
 
 
-	return ERROR;
+	return SUCCESS;
+}
+
+void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
+{
+	// Comment line specifiers: '//', '#'  
+	// if the file has headers go to next line
+	
+	rewind(pfInput);
+
+	int numValueLines = 1;
+	int numCommentLines = 0;
+	int curChar;
+	bool isPrevCharSlash = 0;
+
+	while ((curChar = getc(pfInput)) != EOF)
+	{
+		if ((char)curChar == '\n') numValueLines++;
+		
+		// Count comment lines
+		else if ((char)curChar == '#') 
+		{
+			numValueLines--;
+			numCommentLines++;
+		} 
+		else if (isPrevCharSlash && (char)curChar == '/')
+		{
+			numValueLines--;
+			numCommentLines++;
+		}
+		else if (!isPrevCharSlash && (char)curChar == '/')
+		{
+			isPrevCharSlash = !isPrevCharSlash;
+		}
+	}
+	*pNumValueLines = numValueLines;
+	*pNumCommentLines = numCommentLines;
 }
 
 
-int validateData(FILE* pfInput, char* pDelimiter)
+int validateData(FILE* pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
 {
-	// Check if each non-comment line has the same number of delimiters
-	
-	
-	// Determine columns data type: number or string
-	// Check if each column is of that type or null 
+	// -----------------------------------------------------------
+	// TODO NOW
+	// 
+	// Get each data type: String || Number
+	// Do all entries match these data types or null?
+	// 
+	// Incorrect comma count per entry 
+	// 
+	// Count value and comment lines: DONE
+	// -----------------------------------------------------------
+
+	countLines(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
 	
 	
 	return CSV_PARSING_ERROR;
@@ -148,10 +184,10 @@ void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols) {
 	*pNumCols = numDelimiters + 1;
 #endif
 
-	int ch;
-	while ((ch = getc(pfInput)) != EOF)
+	int currentChar;
+	while ((currentChar = getc(pfInput)) != EOF)
 	{
-		char strCh = (char)ch;
+		char strCh = (char)currentChar;
 
 		if (strCh == '\n')
 			break;
@@ -168,11 +204,11 @@ int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
 {
 	if (!pfInput)
 	{
-		printf("ERROR: ERROR: Cannot open file\n");
+		printf("ERROR: Cannot open CSV file\n");
 		return CSV_PARSING_ERROR;
 	}
 
-	// Get number of characters to create dynamic char array
+	// Get number of characters to create buffer (char array)
 	size_t numCharsHeader = 0;
 	int ch;
 
@@ -190,6 +226,9 @@ int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
 	// Buffer headers 
 	rewind(pfInput);
 	size_t numCharsRead = fread(pArrBufferHeader->pData, sizeof(char), pArrBufferHeader->capacity, pfInput);
+	// ------------------------------------------------------------------------
+	// CURRENT FILE POSITION INDICATOR: at the beginning of the second line
+	// ------------------------------------------------------------------------
 	
 	if (numCharsRead != pArrBufferHeader->capacity)
 	{
