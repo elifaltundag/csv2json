@@ -45,14 +45,8 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			// create dynamic char arrays based on these lengths 
 			// get each title
 			// put its address in pHeaderList
-
-
 		}
 		
-		
-		// TOOD: getHeaders()
-
-
 		destroyCharArr(&header);
 		
 
@@ -79,6 +73,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	return ERROR;
 }
 
+
 int validateData(FILE* pfInput, char* pDelimiter)
 {
 	// Check if each non-comment line has the same number of delimiters
@@ -90,6 +85,7 @@ int validateData(FILE* pfInput, char* pDelimiter)
 	
 	return CSV_PARSING_ERROR;
 }
+
 
 void checkHeaders(FILE* pfInput, bool* pHasHeaders)
 {
@@ -131,85 +127,6 @@ void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols) {
 	rewind(pfInput);
 };
 
-void getToFirstNonCommentLine(FILE* pfInput)
-{
-	/*
-	^: current location
-	|: desired location
-
-	^# This is a CSV file
-	|Name,Age,Location
-	John,25,New York
-
-	^# This is a CSV file
-	# Contains headers
-	|Name,Age,Location
-	John,25,New York
-
-	Name,Age,Location
-	^# Here begins data
-	|John,25,New York
-	*/
-
-
-}
-
-void setNumHeaderLetters(IntArr* pNumHeaderLetters, FILE* pfInput, char* pDelimiter)
-{
-	if (!pfInput)
-	{
-		printf("ERROR: Cannot open file\n");
-		return;
-	}
-
-	int letter;
-	int numLetters = 0;
-	
-	while ((letter = getc(pfInput)) != EOF)
-	{
-		// TODO: escape sequences 
-
-		if ((char) letter == *pDelimiter)
-		{
-			addNewElement(pNumHeaderLetters, numLetters);
-			numLetters = 0;
-			continue;
-		}
-
-		if ((char)letter == '\n')
-		{
-			addNewElement(pNumHeaderLetters, numLetters);
-			break;
-		}
-
-		numLetters++;
-	}
-
-	rewind(pfInput);
-}
-
-int getNumHeaderLetters(IntArr* pNumHeaderLetters, int* pNumCols)
-{
-	int totalNumHeadersLine = *pNumCols - 1;
-	
-	for (size_t i = 0; i < pNumHeaderLetters->size; i++)
-	{
-		totalNumHeadersLine += pNumHeaderLetters->pData[i];
-	}
-	
-	return totalNumHeadersLine;
-};
-
-void setHeaders(FILE* pfInput, CharArr* pHeaderList, IntArr* pNumHeaderLetters)
-{
-	for (int i = 0; i < pNumHeaderLetters->size; ++i)
-	{
-		CharArr header;
-		createCharArr(&header, pNumHeaderLetters->pData[i]);
-		fread(header.pData, sizeof(char), pNumHeaderLetters->pData[i], pfInput);
-	}
-}
-
 int bufferHeader(FILE* pfInput, CharArr* pArrBufferHeader)
 {
 	if (!pfInput)
@@ -217,7 +134,6 @@ int bufferHeader(FILE* pfInput, CharArr* pArrBufferHeader)
 		printf("ERROR: ERROR: Cannot open file\n");
 		return CSV_PARSING_ERROR;
 	}
-
 
 	// Get number of characters to create dynamic char array
 	size_t numCharsHeader = 0;
@@ -233,7 +149,6 @@ int bufferHeader(FILE* pfInput, CharArr* pArrBufferHeader)
 	}
  
 	createCharArr(pArrBufferHeader, numCharsHeader);
-	
 
 	// Buffer header 
 	rewind(pfInput);
