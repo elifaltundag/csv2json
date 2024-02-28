@@ -14,7 +14,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	determineNumCols(pfInput, pDelimiter, pNumCols);
 	checkHeaders(pfInput, pHasHeaders);
 	
-	int dataValidated = validateData(pfInput, pDelimiter);
+	int dataValidated = validateData(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
 	if (dataValidated != SUCCESS)
 	{
 		return CSV_PARSING_ERROR;
