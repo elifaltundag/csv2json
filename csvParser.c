@@ -13,12 +13,28 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 {
 	determineNumCols(pfInput, pDelimiter, pNumCols);
 	checkHeaders(pfInput, pHasHeaders);
+	
+	if (validateData(pfInput, pDelimiter) != SUCCESS)
+	{
+		// -----------------------------------------------------------
+		// TODO NEXT
+		// 
+		// Get each data type: String || Number
+		// Do all entries match these data types or null?
+		// 
+		// Incorrect comma count per entry 
+		// 
+		// Are there any comment lines?
+		// -----------------------------------------------------------
+		
+		return CSV_PARSING_ERROR;
+	}
 
 	if (*pHasHeaders)
 	{
-		// Buffer header ---------------------------------------------
-		CharArr header;
-		int buffer = bufferHeader(pfInput, &header);
+		// Buffer headers ---------------------------------------------
+		CharArr headers;
+		int buffer = bufferHeaders(pfInput, &headers);
 
 		if (buffer != SUCCESS)
 		{
@@ -39,28 +55,29 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			return CSV_PARSING_ERROR;
 		}
 
-		// Separete header --------------------------------------------
+		// Get each header separately ---------------------------------
 		// Get each title's length
+		
 		int numChar = 0;
-		for (size_t i = 0; i < header.capacity; ++i)
+		for (size_t i = 0; i < headers.capacity; ++i)
 		{
-			if (header.pData[i] != *pDelimiter) numChar++;
+			// ------------------------------------------------------------
+			// TODO: Eliminate header quotes
+			// ------------------------------------------------------------
+
+			if (headers.pData[i] != *pDelimiter) numChar++;
 			else {
 				addNewInt(&numHeaderChars, numChar);
 				numChar = 0;
 			}
-
-
 		}
 		addNewInt(&numHeaderChars, numChar);
 		
-		
-		// Create char arrays based on these lengths 
-		// Get each title
-		// Put its address in pHeaderList
+		// Get each header
 		int numPrevHeader = 0;
 		for (int iHeader = 0; iHeader < *pNumCols; iHeader++)
 		{
+			// Create char arrays based on these lengths 
 			size_t numChars = (size_t) numHeaderChars.pData[iHeader];
 			
 			CharArr headerArr;
@@ -70,26 +87,21 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			if (iHeader != 0) {
 				numPrevHeader += numHeaderChars.pData[iHeader - 1] + 1;
 			}
-			// numPrevHeader = (iHeader == 0) ? 0 : numHeaderChars.pData[iHeader - 1] + iHeader;
 			
-			// Add each character to header
+			// Add each char to header
 			for (int iChar = numPrevHeader; iChar < numChars + numPrevHeader; iChar++)
 			{
-				addNewChar(&headerArr, header.pData[iChar]);
+				addNewChar(&headerArr, headers.pData[iChar]);
 			}
 
 			// Add CharArr's address to pHeaderList
 			pHeaderList[iHeader] = headerArr.pData;
 		}
 		
-		destroyCharArr(&header);
+		destroyCharArr(&headers);
 	}
 	
-	if (validateData != SUCCESS)
-	{
-		return CSV_PARSING_ERROR;
-	}
-	
+
 
 	return ERROR;
 }
@@ -111,7 +123,6 @@ void getToFirstNonCommentLine(FILE* pfInput)
 {
 	return;
 }
-
 
 void checkHeaders(FILE* pfInput, bool* pHasHeaders)
 {
@@ -153,7 +164,7 @@ void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols) {
 	rewind(pfInput);
 };
 
-int bufferHeader(FILE* pfInput, CharArr* pArrBufferHeader)
+int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
 {
 	if (!pfInput)
 	{
@@ -176,7 +187,7 @@ int bufferHeader(FILE* pfInput, CharArr* pArrBufferHeader)
  
 	createCharArr(pArrBufferHeader, numCharsHeader);
 
-	// Buffer header 
+	// Buffer headers 
 	rewind(pfInput);
 	size_t numCharsRead = fread(pArrBufferHeader->pData, sizeof(char), pArrBufferHeader->capacity, pfInput);
 	
