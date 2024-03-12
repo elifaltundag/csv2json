@@ -14,7 +14,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	determineNumCols(pfInput, pDelimiter, pNumCols);
 	checkHeaders(pfInput, pHasHeaders);
 	
-	int dataValidated = validateData(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
+	int dataValidated = validateData(pfInput, pDelimiter, pNumCols, pNumValueLines, pNumCommentLines, pHasHeaders);
 	if (dataValidated != SUCCESS)
 	{
 		return CSV_PARSING_ERROR;
@@ -99,6 +99,29 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	return SUCCESS;
 }
 
+int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
+{
+	// -----------------------------------------------------------
+	// TODO NOW
+	// 
+	// Get each data type: String || Number
+	// Do all entries match these data types or null?
+	// 
+	// Incorrect comma count per entry: IN PROGRESS
+	// 
+	// Count value and comment lines: DONE
+	// -----------------------------------------------------------
+
+	countLines(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
+	int correctNumCols = checkLineEntries(pfInput, pDelimiter, pNumCols);
+	if (correctNumCols != SUCCESS) {
+		return CSV_PARSING_ERROR;
+	}
+
+
+	return CSV_PARSING_ERROR;
+}
+
 void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
 {
 	// Comment line specifiers: '//', '#'  
@@ -108,56 +131,66 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 
 	int numValueLines = 1;
 	int numCommentLines = 0;
-	int curChar;
+	int cur;
 	bool isPrevCharSlash = 0;
 
-	while ((curChar = getc(pfInput)) != EOF)
+	while ((cur = getc(pfInput)) != EOF)
 	{
-		if ((char)curChar == '\n') numValueLines++;
+		char curChar = (char)cur;
+		if (curChar == '\n') numValueLines++;
 		
 		// Count comment lines
-		else if ((char)curChar == '#') 
+		else if (curChar == '#') 
 		{
 			numValueLines--;
 			numCommentLines++;
 		} 
-		else if (isPrevCharSlash && (char)curChar == '/')
+		else if (isPrevCharSlash && curChar == '/')
 		{
 			numValueLines--;
 			numCommentLines++;
 		}
-		else if (!isPrevCharSlash && (char)curChar == '/')
+		else if (!isPrevCharSlash && curChar == '/')
 		{
 			isPrevCharSlash = !isPrevCharSlash;
 		}
 	}
 	*pNumValueLines = numValueLines;
 	*pNumCommentLines = numCommentLines;
+
 }
 
-
-int validateData(FILE* pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
+int checkLineEntries(FILE* pfInput, char* pDelimiter, const int* pNumCols)
 {
-	// -----------------------------------------------------------
-	// TODO NOW
-	// 
-	// Get each data type: String || Number
-	// Do all entries match these data types or null?
-	// 
-	// Incorrect comma count per entry 
-	// 
-	// Count value and comment lines: DONE
-	// -----------------------------------------------------------
+	rewind(pfInput);
 
-	countLines(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
+	int cur;
+	int numLineDelimiters = 0;
+	bool isPrevCharSlash = 0;
+
+	while ((cur = getc(pfInput)) != EOF) {
+		char curChar = (char)cur;
+		if (curChar == *pDelimiter) numLineDelimiters++;
+		else if (curChar == '\n') {
+			if (numLineDelimiters + 1 < *pNumCols) return CSV_PARSING_ERROR;
+			numLineDelimiters = 0;
+		}
+		
+		if (numLineDelimiters >= *pNumCols) {
+			return CSV_PARSING_ERROR;
+		}
+
+		// TODO: skip comment lines
+		/* 
+		else if (curChar == '#') continue;
+		else if (isPrevCharSlash && curChar == '/') continue;
+		else if (!isPrevCharSlash && curChar == '/') isPrevCharSlash = !isPrevCharSlash;
+		*/
+	}
+
 	
 	
-	return CSV_PARSING_ERROR;
-}
-
-void getToFirstNonCommentLine(FILE* pfInput)
-{
-	return;
+	return SUCCESS;
 }
 
 void checkHeaders(FILE* pfInput, bool* pHasHeaders)

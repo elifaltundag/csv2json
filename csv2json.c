@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 	int numCols = 0;
 	int numValueLines = 0;
 	int numCommentLines = 0;
-	bool hasHeaders = true;
+	bool hasHeaders = false;
 	CharArr headerList;
 
 	if (parseCSV(pfInput, &delimiter, &numCols, &numValueLines, &numCommentLines, &hasHeaders, &headerList) != SUCCESS)
