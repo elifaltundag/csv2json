@@ -113,7 +113,7 @@ int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNum
 	// -----------------------------------------------------------
 
 	countLines(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
-	int correctNumCols = checkLineEntries(pfInput, pDelimiter, pNumCols);
+	int correctNumCols = eachLineHasSameNumCols(pfInput, pDelimiter, pNumCols);
 	if (correctNumCols != SUCCESS) {
 		return CSV_PARSING_ERROR;
 	}
@@ -168,7 +168,7 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 	*pNumCommentLines = numCommentLines;
 }
 
-int checkLineEntries(FILE* pfInput, char* pDelimiter, const int* pNumCols)
+int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols)
 {
 	rewind(pfInput);
 
@@ -208,8 +208,6 @@ void checkHeaders(FILE* pfInput, bool* pHasHeaders)
 }
 
 void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols) {
-	// Count number of delimiters in the first non-comment line
-	getToFirstNonCommentLine(pfInput);
 	int numDelimiters = 0;
 
 #if 0
