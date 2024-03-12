@@ -132,15 +132,24 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 	int numValueLines = 1;
 	int numCommentLines = 0;
 	int cur;
-	bool isPrevCharSlash = 0;
+	bool isPrevCharSlash = false;
+	bool isNewLine = true;
 
 	while ((cur = getc(pfInput)) != EOF)
 	{
 		char curChar = (char)cur;
-		if (curChar == '\n') numValueLines++;
+		
+		if (curChar == '\n') {
+			numValueLines++;
+			isNewLine = true;
+		}
+
+		if (isNewLine && curChar != '\n') {
+			isNewLine = false;
+		}
 		
 		// Count comment lines
-		else if (curChar == '#') 
+		else if (isNewLine && curChar == '#') 
 		{
 			numValueLines--;
 			numCommentLines++;
@@ -150,14 +159,13 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 			numValueLines--;
 			numCommentLines++;
 		}
-		else if (!isPrevCharSlash && curChar == '/')
+		else if (isNewLine && !isPrevCharSlash && curChar == '/')
 		{
 			isPrevCharSlash = !isPrevCharSlash;
 		}
 	}
 	*pNumValueLines = numValueLines;
 	*pNumCommentLines = numCommentLines;
-
 }
 
 int checkLineEntries(FILE* pfInput, char* pDelimiter, const int* pNumCols)
