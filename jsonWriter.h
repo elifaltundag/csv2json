@@ -2,10 +2,9 @@
 
 // In progress
 int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeaders);
-size_t writeToJSON(FILE* pfOutput, char* text, size_t textSize);
-
 
 // Done
+void printJSON(FILE* pfOutput);
 
 // To be written 
-void printJSON(FILE* pfOutput);
+int writeCSVcontent(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeaders);

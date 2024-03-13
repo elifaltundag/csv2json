@@ -36,24 +36,18 @@ int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeader
 	if (pfInput == NULL) return JSON_WRITING_ERROR;
 	if (pfOutput == NULL) return JSON_WRITING_ERROR;
 
-	char startJSON[] = "data = [\n";
-	char endJSON[] = "\n]"; 
+	const char startJSON[] = "[\n";
+	const char endJSON[] = "\n]"; 
+	
+	fprintf(pfOutput, "%s", startJSON);
+	
+	writeCSVcontent(pfOutput, pfInput, pDelimiter, pHasHeaders);
 
-	char startElement[] = "[\"";
-	char endElement[] = "\"]";
+	fprintf(pfOutput, "%s", endJSON);
 	
-	char delimiter[] = "\", \"";
-	
-	size_t written = writeToJSON(pfOutput, &startJSON, sizeof(startJSON) - 1);
-	printJSON(pfOutput);
+	// printJSON(pfOutput);
 
 	return SUCCESS;
-}
-
-size_t writeToJSON(FILE* pfOutput, char* text, size_t textSize)
-{
-	size_t numCharsWritten = fwrite(text, sizeof(char), textSize, pfOutput);
-	return numCharsWritten;
 }
 
 void printJSON(FILE* pfOutput)
@@ -67,5 +61,54 @@ void printJSON(FILE* pfOutput)
 		char curChar = (char)cur;
 		printf("%c", curChar);
 	}
+}
+
+int writeCSVcontent(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeaders)
+{
+	const char arrOpening[] = "[\"";
+	const char arrClosing[] = "\"]";
+	const char newElm[] = "\", \"";
+	
+	rewind(pfInput);
+
+	bool isNewLine = true;
+	int cur;
+	int numTabs = 1;
+
+	while ((cur = getc(pfInput)) != EOF) {
+		char curChar = (char)cur;
+
+		// if isNewLine open array, switch isNewLine 
+		// if \n close array, switch isNewLine
+		// if delimiter add that
+
+		if (curChar == *pDelimiter) {
+			fprintf(pfOutput, "%s", newElm);
+			continue;
+		}
+
+		if (isNewLine) {
+			for (int i = 0; i < numTabs; i++) {
+				fprintf(pfOutput, "\t");
+			}
+
+			fprintf(pfOutput, "%s", arrOpening);
+			isNewLine = false;
+		}
+
+		if (curChar == '\n') {
+			fprintf(pfOutput, "%s", arrClosing);
+			fprintf(pfOutput, ",");
+			isNewLine = true;
+		}
+
+		fprintf(pfOutput, "%c", curChar);
+	}
+	
+	fprintf(pfOutput, "%s", arrClosing);
+
+
+
+	return SUCCESS;
 }
 
