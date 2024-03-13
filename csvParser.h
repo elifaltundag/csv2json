@@ -6,11 +6,11 @@
 void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols);
 int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader);
 void countLines(FILE* pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders);
+int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols);
 
-// Currently working on
+// Will be improved for edge cases
 int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, CharArr* pHeaderList);
 int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders);
-int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols);
 
 // Not written yet
 void checkHeaders(FILE* pfInput, bool* pHasHeaders);
