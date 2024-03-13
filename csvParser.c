@@ -102,24 +102,23 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
 {
 	// -----------------------------------------------------------
-	// TODO NOW
-	// 
+	// Incorrect comma count per entry: DONE
+	// Count value and comment lines: DONE
+	//
+	// TODO: later
 	// Get each data type: String || Number
 	// Do all entries match these data types or null?
-	// 
-	// Incorrect comma count per entry: IN PROGRESS
-	// 
-	// Count value and comment lines: DONE
 	// -----------------------------------------------------------
 
 	countLines(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
-	int correctNumCols = eachLineHasSameNumCols(pfInput, pDelimiter, pNumCols);
-	if (correctNumCols != SUCCESS) {
+	int validNumEntries = eachLineHasSameNumCols(pfInput, pDelimiter, pNumCols);
+	if (validNumEntries != SUCCESS) {
+		printf("ERROR! Invalid number of entries at line %d\n", validNumEntries);
 		return CSV_PARSING_ERROR;
 	}
 
 
-	return CSV_PARSING_ERROR;
+	return SUCCESS;
 }
 
 void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
@@ -168,25 +167,28 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 	*pNumCommentLines = numCommentLines;
 }
 
+// If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)
+// Else returns the first invalid line's order
 int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols)
 {
 	rewind(pfInput);
 
-	int cur;
-	int numLineDelimiters = 0;
+	int cur, numLineDelimiters = 0, curLine = 1;
 	bool isPrevCharSlash = 0;
 
 	while ((cur = getc(pfInput)) != EOF) {
 		char curChar = (char)cur;
+		
 		if (curChar == *pDelimiter) numLineDelimiters++;
+		
 		else if (curChar == '\n') {
-			if (numLineDelimiters + 1 < *pNumCols) return CSV_PARSING_ERROR;
+			if (numLineDelimiters + 1 < *pNumCols) return curLine;
+			curLine++;
 			numLineDelimiters = 0;
 		}
 		
-		if (numLineDelimiters >= *pNumCols) {
-			return CSV_PARSING_ERROR;
-		}
+		if (numLineDelimiters >= *pNumCols) return curLine;
+		
 
 		// TODO: skip comment lines
 		/* 
