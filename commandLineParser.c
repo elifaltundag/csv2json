@@ -51,6 +51,8 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 			return displayExampleUsageQuit();
 		}
 
+		// w: opens to write only, if the file already exists its content is deleted 
+		// w+: opens to read+write, if the file already exists its content is deleted 
 		errno_t errOutput = fopen_s(ppfOutput, argv[2], "w+");
 		if (errOutput != SUCCESS)
 		{
