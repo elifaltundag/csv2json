@@ -30,6 +30,9 @@
     <ClCompile Include="IntArr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="jsonWriter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="commandLineParser.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IntArr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jsonWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

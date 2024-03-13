@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "definitions.h"
+
+#include "CharArr.h"
+
 #include "commandLineParser.h"
 #include "csvParser.h"
-#include "CharArr.h"
+#include "jsonWriter.h"
 
 int main(int argc, char* argv[])
 {
@@ -29,9 +32,13 @@ int main(int argc, char* argv[])
 		return CSV_PARSING_ERROR;	   
 	}
 
+	if (jsonWriter(pfOutput, pfInput, &delimiter, &hasHeaders))
+	{
+		return JSON_WRITING_ERROR;
+	}
+	
 
-
-
+	// FIX: If you cant parse CSV you dont close the files!!
 	if (pfInput != NULL) {
 		fclose(pfInput);
 	}

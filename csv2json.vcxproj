@@ -132,6 +132,7 @@
     <ClCompile Include="csvParser.c" />
     <ClCompile Include="CharArr.c" />
     <ClCompile Include="IntArr.c" />
+    <ClCompile Include="jsonWriter.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="commandLineParser.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="definitions.h" />
     <ClInclude Include="CharArr.h" />
     <ClInclude Include="IntArr.h" />
+    <ClInclude Include="jsonWriter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
