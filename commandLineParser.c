@@ -1,17 +1,20 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "definitions.h"
 #include "commandLineParser.h"
 
-int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** ppfOutput, char* pDelimiter)
+int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** ppfOutput, char* pDelimiter, bool* pHasHeaders)
 {
-	
+	// No input or output path
 	if (argc == 1)
 	{
 		printf("ERROR! Missing input and output paths\n");
 	}
 
-
+	// Two possibilities:
+	// 1. User needs help
+	// 2. User missed input or output path
 	if (argc == 2)
 	{
 		if (strcmp(argv[1], "--help") == SUCCESS || strcmp(argv[1], "-help") == SUCCESS || strcmp(argv[1], "--h") == SUCCESS || strcmp(argv[1], "-h") == SUCCESS)
@@ -24,12 +27,10 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 
 	}
 
-	if (argc >= 3) {
-		
-		/* Validate file paths
-		1. Check extension
-		2. Access 
-		*/
+	// Validate file paths
+	// 1. Check extension
+	// 2. Access
+	if (argc >= 3) {		
 		int extnInput = validateFileExtension(argv[1], "csv");
 		if (extnInput != SUCCESS)
 		{
@@ -61,35 +62,74 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 			return displayExampleUsageQuit();
 		}
 
-		// Assign new delimiter if provided
-		// What happens with whitespace?
-		if (argc > 3) *pDelimiter = *(argv[3]);
-
-		printf("Valid input and output paths\nCSV delimiter: %c\n", *pDelimiter);
-		return SUCCESS;
-
-#if 0
-		if (errInput == SUCCESS && errOutput == SUCCESS)
-		{
-
-			// Assign new delimiter if provided
-			// What happens with whitespace?
-			if (argc > 3)
-			{
-				*pDelimiter = *(argv[3]);
-			}
-
-			printf("Valid input and output paths\nCSV delimiter: %c\n", *pDelimiter);
+		printf("Valid input and output paths\n");
+		if (argc == 3) {
+			printf("Has 3 arguments\n");
 			return SUCCESS;
 		}
-		else if (errInput == SUCCESS) printf("ERROR! Invalid output path\n");
-		else if (errOutput == SUCCESS) printf("ERROR! Invalid input path\n");
-		else printf("ERROR! Invalid input and output paths\n");
-#endif
+		
+		
 	}
+
+	// Third argument: headers or delimiter
+	if (argc == 4) {
+		char* pArg3 = argv[3];
+		
+		int thirdArgFigured = argHeadersOrDelimiter(pArg3, pDelimiter, pHasHeaders);
+		
+		if (thirdArgFigured == DELIMITER || thirdArgFigured == HEADERS) return SUCCESS;
+		bool goon = true;
+	}
+
+
+	// Possibilities
+	//
+	// argv[3]: headers, argv[4]: delimiter
+	// ... headers ;
+	//
+	// argv[4]: headers, argv[3]: delimiter
+	// ... ; headers
+
+	if (argc == 5) {
+		char* pArg3 = argv[3];
+		char* pArg4 = argv[4];
+
+		int thirdArgFigured = argHeadersOrDelimiter(pArg3, pDelimiter, pHasHeaders);
+		int fourthArgFigured = argHeadersOrDelimiter(pArg4, pDelimiter, pHasHeaders);
+		bool cond = ((thirdArgFigured == HEADERS && fourthArgFigured == DELIMITER) || (thirdArgFigured == DELIMITER && fourthArgFigured == HEADERS));
+
+		if (cond) return SUCCESS;
+
+		return CSV_PARSING_ERROR;
+	}
+
 	
 	return displayExampleUsageQuit();
 }
+
+int argHeadersOrDelimiter(char* pArg, char* pDelimiter, bool* hasHeaders) {
+	// ASCII code Delimiter
+		//         44 , 
+		//         59 ;
+		//        124 |	
+		//        ??? \t // not yet added
+
+	if (*pArg == 44 || *pArg == 59 || *pArg == 124) {
+		*pDelimiter = *pArg;
+		printf("CSV delimiter: %c\n", *pDelimiter);
+		return DELIMITER;
+	}
+
+	if (strcmp(pArg, "headers") == SUCCESS) {
+		*hasHeaders = true;
+		printf("CSV file has headers\n");
+		return HEADERS;
+	}
+
+	return CSV_PARSING_ERROR;
+}
+
+
 
 void findMissingFilePath(char* pPath)
 {

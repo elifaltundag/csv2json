@@ -108,7 +108,6 @@ int writeCSVcontent(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasH
 	fprintf(pfOutput, "%s", arrClosing);
 
 
-
 	return SUCCESS;
 }
 

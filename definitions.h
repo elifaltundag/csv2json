@@ -8,5 +8,8 @@
 #define CSV_PARSING_ERROR -2
 #define JSON_WRITING_ERROR -3
 
+#define DELIMITER 66
+#define HEADERS 67
+
 
 #endif

@@ -13,18 +13,18 @@ int main(int argc, char* argv[])
 	FILE* pfInput = NULL;
 	FILE* pfOutput = NULL;
 	char delimiter = ',';
+	bool hasHeaders = false;
 
-	if (parseCommandLineParameters(argc, argv, &pfInput, &pfOutput, &delimiter) != SUCCESS)
+	if (parseCommandLineParameters(argc, argv, &pfInput, &pfOutput, &delimiter, &hasHeaders) != SUCCESS)
 	{
 		return CMDLINE_PARSING_ERROR;
 	}
 
 
-
+#if 0
 	int numCols = 0;
 	int numValueLines = 0;
 	int numCommentLines = 0;
-	bool hasHeaders = false;
 	CharArr headerList;
 
 	if (parseCSV(pfInput, &delimiter, &numCols, &numValueLines, &numCommentLines, &hasHeaders, &headerList) != SUCCESS)
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	{
 		return JSON_WRITING_ERROR;
 	}
-	
+#endif
 
 	// FIX: If you cant parse CSV you dont close the files!!
 	if (pfInput != NULL) {
