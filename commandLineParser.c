@@ -63,47 +63,33 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 		}
 
 		printf("Valid input and output paths\n");
-		if (argc == 3) {
-			printf("Has 3 arguments\n");
-			return SUCCESS;
-		}
-		
-		
+		if (argc == 3) return SUCCESS;
 	}
 
 	// Third argument: headers or delimiter
 	if (argc == 4) {
-		char* pArg3 = argv[3];
+		int arg3 = argHeadersOrDelimiter(argv[3], pDelimiter, pHasHeaders);
 		
-		int thirdArgFigured = argHeadersOrDelimiter(pArg3, pDelimiter, pHasHeaders);
-		
-		if (thirdArgFigured == DELIMITER || thirdArgFigured == HEADERS) return SUCCESS;
-		bool goon = true;
+		if (arg3 == DELIMITER || arg3 == HEADERS) return SUCCESS;
 	}
 
 
-	// Possibilities
+	// Third and fourth argument - possibilities
 	//
 	// argv[3]: headers, argv[4]: delimiter
 	// ... headers ;
 	//
 	// argv[4]: headers, argv[3]: delimiter
 	// ... ; headers
-
 	if (argc == 5) {
-		char* pArg3 = argv[3];
-		char* pArg4 = argv[4];
+		int arg3 = argHeadersOrDelimiter(argv[3], pDelimiter, pHasHeaders);
+		int arg4 = argHeadersOrDelimiter(argv[4], pDelimiter, pHasHeaders);
 
-		int thirdArgFigured = argHeadersOrDelimiter(pArg3, pDelimiter, pHasHeaders);
-		int fourthArgFigured = argHeadersOrDelimiter(pArg4, pDelimiter, pHasHeaders);
-		bool cond = ((thirdArgFigured == HEADERS && fourthArgFigured == DELIMITER) || (thirdArgFigured == DELIMITER && fourthArgFigured == HEADERS));
-
-		if (cond) return SUCCESS;
+	if ((arg3 == HEADERS && arg4 == DELIMITER) || (arg3 == DELIMITER && arg4 == HEADERS)) return SUCCESS;
 
 		return CSV_PARSING_ERROR;
 	}
 
-	
 	return displayExampleUsageQuit();
 }
 
