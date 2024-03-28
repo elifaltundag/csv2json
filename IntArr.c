@@ -7,7 +7,7 @@ void createIntArr(IntArr* pArr, size_t capacity)
 {
 	pArr->pData = (int*)malloc(capacity * sizeof(int));
 	if (!pArr->pData) {
-		printf("ERROR: Memory allocation failed!\n");
+		printf("ERROR: Memory allocation failed! Cannot create integer array\n");
 	}
 	
 	pArr->capacity = capacity;

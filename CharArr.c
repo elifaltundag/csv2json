@@ -7,7 +7,7 @@ void createCharArr(CharArr* pArr, size_t capacity)
 {
 	pArr->pData = (char*)malloc(capacity * sizeof(char));
 	if (!pArr->pData) {
-		printf("ERROR: Memory allocation failed!\n");
+		printf("ERROR: Memory allocation failed! Cannot create character array\n");
 	}
 	
 	pArr->capacity = capacity;
