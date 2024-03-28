@@ -9,10 +9,9 @@
 #include "CharArr.h"
 #include "IntArr.h"
 
-int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, CharArr* pHeaderList)
+int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, char** pHeaderList)
 {
 	determineNumCols(pfInput, pDelimiter, pNumCols);
-	checkHeaders(pfInput, pHasHeaders);
 	
 	int dataValidated = validateData(pfInput, pDelimiter, pNumCols, pNumValueLines, pNumCommentLines, pHasHeaders);
 	if (dataValidated != SUCCESS)
@@ -27,21 +26,16 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	{
 		// Buffer headers ---------------------------------------------
 		CharArr headers;
-		int buffer = bufferHeaders(pfInput, &headers);
+		int headerBuffered = bufferHeaders(pfInput, &headers);
 
-		if (buffer != SUCCESS)
+		if (headerBuffered != SUCCESS)
 		{
 			return CSV_PARSING_ERROR;
 		}
 
 		IntArr numHeaderChars;
 		createIntArr(&numHeaderChars, *pNumCols);
-		if (!pHeaderList)
-		{
-			return CSV_PARSING_ERROR;
-		}
 
-		char** pHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
 		if (!numHeaderChars.pData)
 		{
 			destroyIntArr(&numHeaderChars);
@@ -49,9 +43,16 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 		}
 
 		// Get each header separately ---------------------------------
-		// Get each title's length
-		
+		// 1. Get each title's length: assign it in numHeaderChars
+		// 2. Create numCols many CharArrs
+		// 3. Each CharArr has the corresponding lenght (step 1)
+		// 4. Add each CharArr's address to headerList
+		// headerList: array of pointers to CharArr
+		// pass by reference: pointer to headerList
+		// 5. Destroy numHeaderChars
+		// 6. Destroy headers 
 		int numChar = 0;
+		
 		for (size_t i = 0; i < headers.capacity; ++i)
 		{
 			// ------------------------------------------------------------
@@ -66,7 +67,14 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 		}
 		addNewInt(&numHeaderChars, numChar);
 		
-		// Get each header
+
+#if 0
+		// Get each header -------------------------------------------------
+		pHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
+		if (!pHeaderList)
+		{
+			return CSV_PARSING_ERROR;
+		}
 		int numPrevHeader = 0;
 		for (int iHeader = 0; iHeader < *pNumCols; iHeader++)
 		{
@@ -90,7 +98,8 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			// Add CharArr's address to pHeaderList
 			pHeaderList[iHeader] = headerArr.pData;
 		}
-		
+#endif
+
 		destroyCharArr(&headers);
 	}
 	
@@ -203,27 +212,8 @@ int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols)
 	return SUCCESS;
 }
 
-void checkHeaders(FILE* pfInput, bool* pHasHeaders)
-{
-	// HOW?!!
-	// Compare data types of the first and second non-comment lines columns
-}
-
 void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols) {
 	int numDelimiters = 0;
-
-#if 0
-	char ch;
-
-	while ((ch = getc(pfInput)) != '\n')
-	{
-		if (ch == *pDelimiter) {
-			numDelimiters++;
-		}
-	}
-
-	*pNumCols = numDelimiters + 1;
-#endif
 
 	int currentChar;
 	while ((currentChar = getc(pfInput)) != EOF)
@@ -248,6 +238,7 @@ int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
 		printf("ERROR: Cannot open CSV file\n");
 		return CSV_PARSING_ERROR;
 	}
+	rewind(pfInput);
 
 	// Get number of characters to create buffer (char array)
 	size_t numCharsHeader = 0;
@@ -255,10 +246,9 @@ int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
 
 	while ((ch = getc(pfInput)) != EOF)
 	{
-		if ((char)ch == '\n') break;
-		if ((char)ch == '\"') continue;
-		// TODO: 'Name', Location's code --> What to do with ' 
-
+		char curCh = (char)ch;
+		if (curCh == '\n') break;
+		if (curCh == '\"') continue;
 		numCharsHeader++;
 	}
  

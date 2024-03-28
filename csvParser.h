@@ -9,8 +9,5 @@ void countLines(FILE* pfInput, char* pDelimiter, int* pNumValueLines, int* pNumC
 int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols);
 
 // Will be improved for edge cases
-int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, CharArr* pHeaderList);
+int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, char** pHeaderList);
 int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders);
-
-// Not written yet
-void checkHeaders(FILE* pfInput, bool* pHasHeaders);

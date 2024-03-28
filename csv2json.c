@@ -20,12 +20,15 @@ int main(int argc, char* argv[])
 		return CMDLINE_PARSING_ERROR;
 	}
 
-
-#if 0
 	int numCols = 0;
 	int numValueLines = 0;
 	int numCommentLines = 0;
+	
+	// ERROR: 
+	// headerList is currently character array
+	// in csvParser it is reinitialized as char** pHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
 	CharArr headerList;
+
 
 	if (parseCSV(pfInput, &delimiter, &numCols, &numValueLines, &numCommentLines, &hasHeaders, &headerList) != SUCCESS)
 	{								   
@@ -36,7 +39,7 @@ int main(int argc, char* argv[])
 	{
 		return JSON_WRITING_ERROR;
 	}
-#endif
+
 
 	// FIX: If you cant parse CSV you dont close the files!!
 	if (pfInput != NULL) {
