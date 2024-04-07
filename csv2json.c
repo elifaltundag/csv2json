@@ -23,14 +23,10 @@ int main(int argc, char* argv[])
 	int numCols = 0;
 	int numValueLines = 0;
 	int numCommentLines = 0;
-	
-	// ERROR: 
-	// headerList is currently character array
-	// in csvParser it is reinitialized as char** pHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
-	CharArr headerList;
+	char** ppHeaderList = NULL;
 
 
-	if (parseCSV(pfInput, &delimiter, &numCols, &numValueLines, &numCommentLines, &hasHeaders, &headerList) != SUCCESS)
+	if (parseCSV(pfInput, &delimiter, &numCols, &numValueLines, &numCommentLines, &hasHeaders, &ppHeaderList) != SUCCESS)
 	{								   
 		return CSV_PARSING_ERROR;	   
 	}

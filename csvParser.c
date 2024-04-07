@@ -9,8 +9,10 @@
 #include "CharArr.h"
 #include "IntArr.h"
 
-int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, char** pHeaderList)
+int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, char*** pppHeaderList)
 {
+	// TODO: create numCols by dereferencing pNumCols	
+
 	determineNumCols(pfInput, pDelimiter, pNumCols);
 	
 	int dataValidated = validateData(pfInput, pDelimiter, pNumCols, pNumValueLines, pNumCommentLines, pHasHeaders);
@@ -25,10 +27,10 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	if (*pHasHeaders)
 	{
 		// Buffer headers ---------------------------------------------
-		CharArr headers;
-		int headerBuffered = bufferHeaders(pfInput, &headers);
+		CharArr allHeaders;
+		int allHeadersBuffered = bufferHeaders(pfInput, &allHeaders);
 
-		if (headerBuffered != SUCCESS)
+		if (allHeadersBuffered != SUCCESS)
 		{
 			return CSV_PARSING_ERROR;
 		}
@@ -44,67 +46,59 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 
 		// Get each header separately ---------------------------------
 		// 1. Get each title's length: assign it in numHeaderChars
-		// 2. Create numCols many CharArrs
-		// 3. Each CharArr has the corresponding lenght (step 1)
-		// 4. Add each CharArr's address to headerList
-		// headerList: array of pointers to CharArr
-		// pass by reference: pointer to headerList
+		// 2. Create numCols many char*
+		// 3. Each char* has the corresponding size (step 1)
+		// 4. Add each char*'s address to *pppHeaderList
 		// 5. Destroy numHeaderChars
 		// 6. Destroy headers 
 		int numChar = 0;
 		
-		for (size_t i = 0; i < headers.capacity; ++i)
+		for (size_t i = 0; i < allHeaders.capacity; ++i)
 		{
 			// ------------------------------------------------------------
 			// TODO: Eliminate header quotes
 			// ------------------------------------------------------------
 
-			if (headers.pData[i] != *pDelimiter) numChar++;
+			if (allHeaders.pData[i] != *pDelimiter) numChar++;
 			else {
 				addNewInt(&numHeaderChars, numChar);
 				numChar = 0;
 			}
 		}
 		addNewInt(&numHeaderChars, numChar);
-		
-
-#if 0
-		// Get each header -------------------------------------------------
-		pHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
-		if (!pHeaderList)
-		{
-			return CSV_PARSING_ERROR;
-		}
-		int numPrevHeader = 0;
-		for (int iHeader = 0; iHeader < *pNumCols; iHeader++)
-		{
-			// Create char arrays based on these lengths 
-			size_t numChars = (size_t) numHeaderChars.pData[iHeader];
-			
-			CharArr headerArr;
-			createCharArr(&headerArr, numChars);
-			
-			// Get previous headers char nums sum
-			if (iHeader != 0) {
-				numPrevHeader += numHeaderChars.pData[iHeader - 1] + 1;
-			}
-			
-			// Add each char to header
-			for (int iChar = numPrevHeader; iChar < numChars + numPrevHeader; iChar++)
-			{
-				addNewChar(&headerArr, headers.pData[iChar]);
-			}
-
-			// Add CharArr's address to pHeaderList
-			pHeaderList[iHeader] = headerArr.pData;
-		}
-#endif
-
-		destroyCharArr(&headers);
-	}
 	
 
+		// Get each header and add their address to pppHeaderList
+		*pppHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
+		if (!*pppHeaderList) {
+			return CSV_PARSING_ERROR;
+		}
 
+		int numAddedHeader = 0;
+		int iStart = 0;
+		for (int iHeader = 0; iHeader < *pNumCols; iHeader++) {
+			int sizeHeader = numHeaderChars.pData[iHeader];
+			
+			char* header = (char*)malloc((sizeHeader + 1) * sizeof(char));
+			if (!header) {
+				return CSV_PARSING_ERROR;
+			}
+
+			for (int i = 0; i < sizeHeader; i++) {
+				header[i] = allHeaders.pData[i + iStart];
+			}
+			header[sizeHeader] = '\0';
+
+			(*pppHeaderList)[numAddedHeader] = header;
+			numAddedHeader++;
+
+			iStart += sizeHeader + 1;
+		}
+
+		destroyIntArr(&numHeaderChars);
+		destroyCharArr(&allHeaders);
+	}
+	
 	return SUCCESS;
 }
 
