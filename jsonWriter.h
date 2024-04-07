@@ -5,6 +5,7 @@ int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeader
 
 // Done
 void printJSON(FILE* pfOutput);
+int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter);
 
 // To be written 
-int writeCSVcontent(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeaders);
+int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, const bool hasHeaders);
