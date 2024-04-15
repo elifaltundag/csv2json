@@ -203,6 +203,13 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 			if (*pNumCols = iHeader) {
 				fprintf(pfOutput, "%s", quotes);
 			}
+
+			if (!isFirstLine) {
+				fprintf(pfOutput, "%s,", objClosing);
+			} 
+			else {
+				isFirstLine = false;
+			}
 			
 			fprintf(pfOutput, "%s", objOpening);
 
@@ -210,10 +217,7 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 			iHeader = 0;
 			fprintf(pfOutput, "\t\t%s...%s: %s", quotes, quotes, quotes);
 			iHeader++;
-
-			if (isFirstLine) {
-				isFirstLine = false;
-			} 	
+ 	
 			continue;
 		}
 
