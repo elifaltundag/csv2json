@@ -215,7 +215,7 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 
 			// Write first header
 			iHeader = 0;
-			fprintf(pfOutput, "\t\t%s...%s: %s", quotes, quotes, quotes);
+			fprintf(pfOutput, "\t\t%s%s%s: %s", quotes, (*pppHeaderList)[iHeader], quotes, quotes);
 			iHeader++;
  	
 			continue;
@@ -225,7 +225,7 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 		if (isFirstLine) continue;
 
 		if (curChar == *pDelimiter) {
-			fprintf(pfOutput, "%s,\n\t\t%s...%s: %s", quotes, quotes, quotes, quotes);
+			fprintf(pfOutput, "%s,\n\t\t%s%s%s: %s", quotes, quotes, (*pppHeaderList)[iHeader], quotes, quotes);
 			iHeader++;
 			continue;
 		}
