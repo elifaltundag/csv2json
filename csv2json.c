@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 		return CSV_PARSING_ERROR;	   
 	}
 
-	if (jsonWriter(pfOutput, pfInput, &delimiter, &hasHeaders))
+	if (jsonWriter(pfOutput, pfInput, &delimiter, &numCols, &hasHeaders, &ppHeaderList))
 	{
 		return JSON_WRITING_ERROR;
 	}

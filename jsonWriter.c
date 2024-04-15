@@ -6,83 +6,16 @@
 
 #include "jsonWriter.h"
 
-// -----------------------------------------------------------------
-// Example CSV input
-// John, 25, New York
-// Alice, 30, Los Angeles
-// Bob, 22, Chicago
-// Eve, 35, San Francisco
-//
-// Expected JSON output: array of arrays
-// data = [
-//		["John", "25", "New York"],
-//		["Alice", "30", "Los Angeles"],
-//		["Bob", "22", "Chicago"],
-//		["Eve", "35", "San Francisco"]	
-// ]
-// 
-// WRITE:
-// data = [\n
-// John, 25, New York
-// ^ isNewLine start value: true --> !isNewLine, write ["J
-//     ^ : delimiter --> write ", "
-//					 ^: \n --> isNewLine, write "],
-// 
-// Eve, 35, San Francisco
-//						 ^ EOF --> write "]\n]
-// 
-// 
-// -----------------------------------------------------------------
-// // Example CSV input
-// Name,Age,Location
-// John, 25, New York
-// Alice, 30, Los Angeles
-// Bob, 22, Chicago
-// Eve, 35, San Francisco
-// 
-// Expected JSON output: array of objects
-// data = [
-//		{
-//			"Name": "John" ,
-//			"Age": "25" ,
-//			"Location": "New York" 
-//		},
-//		{
-//			"Name": "Alice" ,
-//			"Age": "30",
-//			"Location": "Los Angeles" 
-//		},
-//		{
-//			"Name": "Bob",
-//			"Age": "22",
-//			"Location": "Chicago"
-//		},
-//		{
-//			"Name": "Eve",
-//			"Age": "35",
-//			"Location": "San Francisco"
-//		}
-// ]
-// 
-// WRITE
-// data = [\n
-//  
-// 
-// 
-// 
-// -----------------------------------------------------------------
-
-int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, bool* pHasHeaders) {
+int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, bool* pHasHeaders, char*** pppHeaderList) {
 	if (pfInput == NULL) return JSON_WRITING_ERROR;
 	if (pfOutput == NULL) return JSON_WRITING_ERROR;
 
-	bool hasHeaders = *pHasHeaders;
 	const char startJSON[] = "[\n";
 	const char endJSON[]   = "\n]";   
 	
 	fprintf(pfOutput, "%s", startJSON);
 	
-	if (hasHeaders) writeArrOfObjs(pfOutput, pfInput, pDelimiter, hasHeaders);
+	if (*pHasHeaders) writeArrOfObjs(pfOutput, pfInput, pNumCols, pDelimiter, pppHeaderList);
 	else writeArrOfArrs(pfOutput, pfInput, pDelimiter);
 
 	fprintf(pfOutput, "%s", endJSON);
@@ -105,11 +38,38 @@ void printJSON(FILE* pfOutput)
 	}
 }
 
+// -----------------------------------------------------------------
+// Example CSV input
+// John, 25, New York
+// Alice, 30, Los Angeles
+// Bob, 22, Chicago
+// Eve, 35, San Francisco
+//
+// Expected JSON output: array of arrays
+// [
+//		["John", "25", "New York"],
+//		["Alice", "30", "Los Angeles"],
+//		["Bob", "22", "Chicago"],
+//		["Eve", "35", "San Francisco"]	
+// ]
+// 
+// WRITE:
+// [\n
+// John, 25, New York
+// ^ isNewLine start value: true --> !isNewLine, write ["J
+//     ^ : delimiter --> write ", "
+//					 ^: \n --> isNewLine, write "],
+// 
+// Eve, 35, San Francisco
+//						 ^ EOF --> write "]\n]
+//
+// -----------------------------------------------------------------
+
 int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 {
-	const char arrOpening[] = "[\""; // ["
-	const char arrClosing[] = "\"]"; // "] 
-	const char newElm[] = "\", \"";  // ", "
+	const char arrOpening[] = "\t[\""; // tab + ["
+	const char arrClosing[] = "\"]";   // "] 
+	const char newElm[] = "\", \"";    // ", "
 	
 	rewind(pfInput);
 
@@ -130,17 +90,12 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 		}
 
 		if (isNewLine) {
-			for (int i = 0; i < numTabs; i++) {
-				fprintf(pfOutput, "\t");
-			}
-
 			fprintf(pfOutput, "%s", arrOpening);
 			isNewLine = false;
 		}
 
 		if (curChar == '\n') {
-			fprintf(pfOutput, "%s", arrClosing);
-			fprintf(pfOutput, ",");
+			fprintf(pfOutput, "%s,", arrClosing);
 			isNewLine = true;
 		}
 
@@ -153,15 +108,91 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 	return SUCCESS;
 }
 
-int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, const bool hasHeaders)
+
+// -----------------------------------------------------------------
+// // Example CSV input
+// Name,Age,Location
+// John, 25, New York
+// Alice, 30, Los Angeles
+// Bob, 22, Chicago
+// Eve, 35, San Francisco
+// 
+// Expected JSON output: array of objects
+// [
+//		{
+//			"Name": "John",
+//			"Age": "25",
+//			"Location": "New York" 
+//		},
+//		{
+//			"Name": "Alice",
+//			"Age": "30",
+//			"Location": "Los Angeles" 
+//		},
+//		{
+//			"Name": "Bob",
+//			"Age": "22",
+//			"Location": "Chicago"
+//		},
+//		{
+//			"Name": "Eve",
+//			"Age": "35",
+//			"Location": "San Francisco"
+//		}
+// ]
+// 
+// Name,Age,Location
+//					^ first \n: skip till here - open new object, write header[0] in quotes, colon : and open new quotes
+// 
+// John, 25, New York
+// ^^^^ get each character
+// 
+// John, 25, New York
+//	   ^ delimiter: close quotes, get to new entry, write header[1] in quotes, colon : and open new quotes
+// 
+// John, 25, New York
+//					 ^ newLine: close quotes, close object, reset iHeader = 0, open new object, write header[0] in quotes, colon : and open new quotes
+//  
+// 
+// Alice, 30, Los Angeles
+// Bob, 22, Chicago
+// Eve, 35, San Francisco
+//						 ^ EOF: close quotes, close object close arr
+// 
+// WRITE
+// [
+// \n	\t{
+// \n		\t\t\"Name\": \"John\",
+// \n		\t\t\"Age\": \"25\",
+// \n		\t\t\"Location\": \"New York\"
+// \n	\t},
+// \n	\t{
+// \n		\t\t\"Name\": \"Alice\",
+// \n		\t\t\"Age\": \"30\",
+// \n		\t\t\"Location\": \"Los Angeles\"
+// \n	\t},
+// \n	\t{
+// \n		\t\t\"Name\": \"Bob\",
+// \n		\t\t\"Age\": \"22\",
+// \n		\t\t\"Location\": \"Chicago"
+// \n	\t},
+// \n   \t{
+// \n	\t\t\"Name\": \"Eve\",
+// \n	\t\t\"Age\": \"35\",
+// \n	\t\t\"Location\": \"San Francisco\"
+// \n	\t}
+// \n] 
+// -----------------------------------------------------------------
+
+int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, char*** pppHeaderList)
 {
-	const char objOpening[] = "{\n"; 
-	const char objClosing[] = "\n}";
+	const char objOpening[] = "{"; 
+	const char objClosing[] = "}";
 	const char newElm[]     = ",\n"; 
 
-	rewind(pfInput);
+	const char qoutes[] = "\"";
 
-	
+	rewind(pfInput);
 
 	return SUCCESS;
 }
