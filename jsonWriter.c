@@ -10,12 +10,12 @@ int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, b
 	if (pfInput == NULL) return JSON_WRITING_ERROR;
 	if (pfOutput == NULL) return JSON_WRITING_ERROR;
 
-	const char startJSON[] = "[\n";
+	const char startJSON[] = "[";
 	const char endJSON[]   = "\n]";   
 	
 	fprintf(pfOutput, "%s", startJSON);
 	
-	if (*pHasHeaders) writeArrOfObjs(pfOutput, pfInput, pNumCols, pDelimiter, pppHeaderList);
+	if (*pHasHeaders) writeArrOfObjs(pfOutput, pfInput, pDelimiter, pNumCols, pppHeaderList);
 	else writeArrOfArrs(pfOutput, pfInput, pDelimiter);
 
 	fprintf(pfOutput, "%s", endJSON);
@@ -67,7 +67,7 @@ void printJSON(FILE* pfOutput)
 
 int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 {
-	const char arrOpening[] = "\t[\""; // tab + ["
+	const char arrOpening[] = "\n\t[\""; // tab + ["
 	const char arrClosing[] = "\"]";   // "] 
 	const char newElm[] = "\", \"";    // ", "
 	
@@ -78,7 +78,7 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 	int numTabs = 1;
 
 	while ((cur = getc(pfInput)) != EOF) {
-		char curChar = (char)cur;
+		char curChar = (char) cur;
 
 		// if isNewLine: open array, switch isNewLine 
 		// if \n: close array, switch isNewLine
@@ -97,6 +97,7 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 		if (curChar == '\n') {
 			fprintf(pfOutput, "%s,", arrClosing);
 			isNewLine = true;
+			continue;
 		}
 
 		fprintf(pfOutput, "%c", curChar);
@@ -186,11 +187,49 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 
 int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, char*** pppHeaderList)
 {
-	const char objOpening[] = "{"; 
-	const char objClosing[] = "}";
-	const char newElm[]     = ",\n"; 
+	const char objOpening[] = "\n\t{\n"; 
+	const char objClosing[] = "\n\t}"; 
 
-	const char qoutes[] = "\"";
+	const char quotes[] = "\"";
+
+	bool isFirstLine = true; 
+	int cur; 
+	int iHeader = 0;
+
+	while ((cur = getc(pfInput)) != EOF) {
+		char curChar = (char) cur;
+		
+		if (curChar == '\n') {
+			if (*pNumCols = iHeader) {
+				fprintf(pfOutput, "%s", quotes);
+			}
+			
+			fprintf(pfOutput, "%s", objOpening);
+
+			// Write first header
+			iHeader = 0;
+			fprintf(pfOutput, "\t\t%s...%s: %s", quotes, quotes, quotes);
+			iHeader++;
+
+			if (isFirstLine) {
+				isFirstLine = false;
+			} 	
+			continue;
+		}
+
+		// Skip the first line
+		if (isFirstLine) continue;
+
+		if (curChar == *pDelimiter) {
+			fprintf(pfOutput, "%s,\n\t\t%s...%s: %s", quotes, quotes, quotes, quotes);
+			iHeader++;
+			continue;
+		}
+
+		fprintf(pfOutput, "%c", curChar);
+	}
+
+	fprintf(pfOutput, "%s%s", quotes, objClosing);
 
 	rewind(pfInput);
 
