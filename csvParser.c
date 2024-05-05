@@ -23,8 +23,8 @@ int parseCSV(Parameters* pParams)
 	determineNumCols(pParams);
 	determineNumLines(pParams);
 
-#if 0
 	if (validateData(pParams) != SUCCESS) return CSV_PARSING_ERROR;
+#if 0
 
 	// -----------------------------------------------------------
 	// Save each header if the CSV file has headers
@@ -174,20 +174,18 @@ void determineNumLines(Parameters* pParams)
 
 int validateData(Parameters* pParams)
 {
+	int invalidLine = eachLineHasSameNumCols(pParams);
+
+	if (invalidLine != SUCCESS) {
+		printf("ERROR! Invalid number of entries at line %d\n", invalidLine);
+		return CSV_PARSING_ERROR;
+	}
+
 	// -----------------------------------------------------------
 	// TODO
 	// Get each data type: String || Number
 	// Do all entries match these data types or null?
 	// -----------------------------------------------------------
-
-	determineNumLines(pParams);
-	int validNumEntries = eachLineHasSameNumCols(pParams);
-#
-	if (validNumEntries != SUCCESS) {
-		printf("ERROR! Invalid number of entries at line %d\n", validNumEntries);
-		return CSV_PARSING_ERROR;
-	}
-
 
 	return SUCCESS;
 }
@@ -229,41 +227,51 @@ int bufferCSVContents(Parameters* pParams)
 
 
 
+
+
+
+
+
+
+
+
+
+
 // If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)
 // Else returns the first invalid line's order
 
 
+
 int eachLineHasSameNumCols(Parameters* pParams)
 {
-	rewind(pParams->pfInput);
+	int numLineDelimiters = 0;
+	int curLine = 1;
+	int i = 0;
+	char delimiter = pParams->delimiter;
 
-	int cur, numLineDelimiters = 0, curLine = 1;
-	bool isPrevCharSlash = 0;
-
-	while ((cur = getc(pParams->pfInput)) != EOF) {
-		char curChar = (char)cur;
+	while (i < pParams->numChars) 
+	{
+		char curChar = pParams->csvContents[i];
+		i++;
 		
 		if (curChar == pParams->delimiter) numLineDelimiters++;
-		
 		else if (curChar == '\n') {
 			if (numLineDelimiters + 1 < pParams->numCols) return curLine;
 			curLine++;
 			numLineDelimiters = 0;
 		}
-		
-		if (numLineDelimiters >= pParams->numCols) return curLine;
-		
 
-		// TODO: skip comment lines
-		/* 
+		if (numLineDelimiters >= pParams->numCols) return curLine;
+
+
+		// TODO: ignore and skip comment lines
+		/*
 		else if (curChar == '#') continue;
 		else if (isPrevCharSlash && curChar == '/') continue;
 		else if (!isPrevCharSlash && curChar == '/') isPrevCharSlash = !isPrevCharSlash;
 		*/
 	}
 
-	
-	
 	return SUCCESS;
 }
 
