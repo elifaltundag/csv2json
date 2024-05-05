@@ -114,13 +114,11 @@ void determineNumCols(Parameters* pParams) {
 
 	while (i < pParams->numChars)
 	{
+		i++;
 		char curChar = pParams->csvContents[i];
 
 		if (curChar == '\n') break;
 		if (curChar == delimiter) numDelimiters++;
-		// if (strcmp(curChar, pParams->delimiter) == 0) numDelimiters++;
-
-		i++;
 	}
 
 	pParams->numCols = numDelimiters + 1;
