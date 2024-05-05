@@ -33,13 +33,13 @@ int main(int argc, char* argv[])
 		return CSV_PARSING_ERROR;	   
 	}
 
-#if 0
-	if (jsonWriter(pfOutput, pfInput, &delimiter, &numCols, &hasHeaders, &ppHeaderList))
+
+	if (jsonWriter(pParams) != SUCCESS)
 	{
 		closeFiles(pParams);
 		return JSON_WRITING_ERROR;
 	}
-#endif
+
 	
 	closeFiles(pParams);
 	return SUCCESS;

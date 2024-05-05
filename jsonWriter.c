@@ -3,24 +3,25 @@
 #include <stdbool.h>
 
 #include "definitions.h"
+#include "Parameters.h"
 
 #include "jsonWriter.h"
 
-int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, bool* pHasHeaders, char*** pppHeaderList) {
-	if (pfInput == NULL) return JSON_WRITING_ERROR;
-	if (pfOutput == NULL) return JSON_WRITING_ERROR;
+int jsonWriter(Parameters* pParams) {
+	if (pParams->pfInput == NULL) return JSON_WRITING_ERROR;
+	if (pParams->pfOutput == NULL) return JSON_WRITING_ERROR;
 
 	const char startJSON[] = "[";
 	const char endJSON[]   = "\n]";   
 	
-	fprintf(pfOutput, "%s", startJSON);
+	fprintf(pParams->pfOutput, "%s", startJSON);
 	
-	if (*pHasHeaders) writeArrOfObjs(pfOutput, pfInput, pDelimiter, pNumCols, pppHeaderList);
-	else writeArrOfArrs(pfOutput, pfInput, pDelimiter);
+	if (pParams->hasHeaders) writeArrOfObjs(pParams);
+	else writeArrOfArrs(pParams);
 
-	fprintf(pfOutput, "%s", endJSON);
+	fprintf(pParams->pfOutput, "%s", endJSON);
 	
-	printJSON(pfOutput);
+	printJSON(pParams->pfOutput);
 
 	return SUCCESS;
 }
@@ -71,45 +72,45 @@ void printJSON(FILE* pfOutput)
 //
 // -----------------------------------------------------------------
 
-int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
+int writeArrOfArrs(Parameters* pParams)
 {
 	const char arrOpening[] = "\n\t[\""; // tab + ["
 	const char arrClosing[] = "\"]";   // "] 
 	const char newElm[] = "\", \"";    // ", "
 	
-	rewind(pfInput);
+	rewind(pParams->pfInput);
 
 	bool isNewLine = true;
 	int cur;
 	int numTabs = 1;
 
-	while ((cur = getc(pfInput)) != EOF) {
+	while ((cur = getc(pParams->pfInput)) != EOF) {
 		char curChar = (char) cur;
 
 		// if isNewLine: open array, switch isNewLine 
 		// if \n: close array, switch isNewLine
 		// if delimiter: add that
 
-		if (curChar == *pDelimiter) {
-			fprintf(pfOutput, "%s", newElm);
+		if (curChar == pParams->delimiter) {
+			fprintf(pParams->pfOutput, "%s", newElm);
 			continue;
 		}
 
 		if (isNewLine) {
-			fprintf(pfOutput, "%s", arrOpening);
+			fprintf(pParams->pfOutput, "%s", arrOpening);
 			isNewLine = false;
 		}
 
 		if (curChar == '\n') {
-			fprintf(pfOutput, "%s,", arrClosing);
+			fprintf(pParams->pfOutput, "%s,", arrClosing);
 			isNewLine = true;
 			continue;
 		}
 
-		fprintf(pfOutput, "%c", curChar);
+		fprintf(pParams->pfOutput, "%c", curChar);
 	}
 	
-	fprintf(pfOutput, "%s", arrClosing);
+	fprintf(pParams->pfOutput, "%s", arrClosing);
 
 
 	return SUCCESS;
@@ -191,7 +192,7 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 // \n] 
 // -----------------------------------------------------------------
 
-int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, char*** pppHeaderList)
+int writeArrOfObjs(Parameters* pParams)
 {
 	const char objOpening[] = "\n\t{\n"; 
 	const char objClosing[] = "\n\t}"; 
@@ -202,26 +203,26 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 	int cur; 
 	int iHeader = 0;
 
-	while ((cur = getc(pfInput)) != EOF) {
+	while ((cur = getc(pParams->pfInput)) != EOF) {
 		char curChar = (char) cur;
 		
 		if (curChar == '\n') {
-			if (*pNumCols = iHeader) {
-				fprintf(pfOutput, "%s", quotes);
+			if (pParams->numCols = iHeader) {
+				fprintf(pParams->pfOutput, "%s", quotes);
 			}
 
 			if (!isFirstLine) {
-				fprintf(pfOutput, "%s,", objClosing);
+				fprintf(pParams->pfOutput, "%s,", objClosing);
 			} 
 			else {
 				isFirstLine = false;
 			}
 			
-			fprintf(pfOutput, "%s", objOpening);
+			fprintf(pParams->pfOutput, "%s", objOpening);
 
 			// Write first header
 			iHeader = 0;
-			fprintf(pfOutput, "\t\t%s%s%s: %s", quotes, (*pppHeaderList)[iHeader], quotes, quotes);
+			fprintf(pParams->pfOutput, "\t\t%s%s%s: %s", quotes, (pParams->ppHeaderList)[iHeader], quotes, quotes);
 			iHeader++;
  	
 			continue;
@@ -230,20 +231,20 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 		// Skip the first line
 		if (isFirstLine) continue;
 
-		if (curChar == *pDelimiter) {
-			fprintf(pfOutput, "%s,\n\t\t%s%s%s: %s", quotes, quotes, (*pppHeaderList)[iHeader], quotes, quotes);
+		if (curChar == pParams->delimiter) {
+			fprintf(pParams->pfOutput, "%s,\n\t\t%s%s%s: %s", quotes, quotes, (pParams->ppHeaderList)[iHeader], quotes, quotes);
 			iHeader++;
 			continue;
 		}
 
 		
 
-		fprintf(pfOutput, "%c", curChar);
+		fprintf(pParams->pfOutput, "%c", curChar);
 	}
 
-	fprintf(pfOutput, "%s%s", quotes, objClosing);
+	fprintf(pParams->pfOutput, "%s%s", quotes, objClosing);
 
-	rewind(pfInput);
+	rewind(pParams->pfInput);
 
 	return SUCCESS;
 }
@@ -280,7 +281,8 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 
 
 // if a new line or delimiter is followed by a delimiter, it is null 
-bool isEntryNull(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
+// bool isEntryNull(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
+bool isEntryNull(Parameters* pParams)
 {
 	bool isNull = false;
 
