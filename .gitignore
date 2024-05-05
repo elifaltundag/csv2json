@@ -33,4 +33,4 @@ publish/
 .vs/
 
 # JSON outputs 
-data/dest
+data/dest/
