@@ -9,6 +9,11 @@
 #include "jsonWriter.h"
 
 
+void closeFiles(Parameters* pParams) {
+	if (pParams->pfInput != NULL) fclose(pParams->pfInput);
+	if (pParams->pfOutput != NULL) fclose(pParams->pfOutput);
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -40,8 +45,3 @@ int main(int argc, char* argv[])
 	return SUCCESS;
 }
 
-
-void closeFiles(Parameters* pParams) {
-	if (pParams->pfInput != NULL) fclose(pParams->pfInput);
-	if (pParams->pfOutput != NULL) fclose(pParams->pfOutput);
-}
