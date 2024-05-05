@@ -10,6 +10,7 @@ void initializeParameters(Parameters* pParams)
 	pParams->numValueLines = 0;
 	pParams->numCommentLines = 0;
 	pParams->numChars = 0;
+	pParams->csvContents = NULL;
 	pParams->ppHeaderList = NULL;
 }
 

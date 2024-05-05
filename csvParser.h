@@ -12,3 +12,6 @@ int eachLineHasSameNumCols(Parameters* pParams);
 // Will be improved for edge cases
 int parseCSV(Parameters* pParams);
 int validateData(Parameters* pParams);
+
+// In progress
+int bufferCSVContents(Parameters* pParams);

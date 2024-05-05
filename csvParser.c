@@ -13,13 +13,9 @@
 int parseCSV(Parameters* pParams)
 {
 	determineNumCols(pParams);
-	
-	int dataValidated = validateData(pParams);
 
-	if (dataValidated != SUCCESS)
-	{
-		return CSV_PARSING_ERROR;
-	}
+	if (validateData(pParams) != SUCCESS) return CSV_PARSING_ERROR;
+	if (bufferCSVContents(pParams) != SUCCESS) return CSV_PARSING_ERROR;
 
 	// -----------------------------------------------------------
 	// Save each header if the CSV file has headers
@@ -122,6 +118,32 @@ int validateData(Parameters* pParams)
 	}
 
 
+	return SUCCESS;
+}
+
+int bufferCSVContents(Parameters* pParams)
+{
+
+	if (!pParams->pfInput) {
+		printf("ERROR: Cannot open CSV file\n");
+		return CSV_PARSING_ERROR;
+	}
+	rewind(pParams->pfInput);
+
+	pParams->csvContents = (char*)malloc((pParams->numChars + 1) * sizeof(char)); // +1 for null termination
+	if (!pParams->csvContents) {
+		printf("Cannot allocate enough memory to buffer CSV contents\n");
+		return CSV_PARSING_ERROR;
+	}
+	
+	size_t numCharsRead = fread(pParams->csvContents, pParams->numChars, 1, pParams->pfInput);
+	pParams->csvContents[pParams->numChars] = '\0';
+	
+	
+	fclose(pParams->pfInput);
+	pParams->pfInput = NULL;
+
+	
 	return SUCCESS;
 }
 

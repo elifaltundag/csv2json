@@ -13,6 +13,7 @@ typedef struct {
 	int numValueLines;
 	int numCommentLines;
 	size_t numChars;
+	char* csvContents;
 	char** ppHeaderList;
 } Parameters;
 
