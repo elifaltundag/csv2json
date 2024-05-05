@@ -6,14 +6,16 @@
 #include "definitions.h"
 
 #include "csvParser.h"
+#include "Parameters.h"
 #include "CharArr.h"
 #include "IntArr.h"
 
-int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders, char*** pppHeaderList)
+int parseCSV(Parameters* pParams)
 {
-	determineNumCols(pfInput, pDelimiter, pNumCols);
+	determineNumCols(pParams);
 	
-	int dataValidated = validateData(pfInput, pDelimiter, pNumCols, pNumValueLines, pNumCommentLines, pHasHeaders);
+	int dataValidated = validateData(pParams);
+
 	if (dataValidated != SUCCESS)
 	{
 		return CSV_PARSING_ERROR;
@@ -22,11 +24,11 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	// -----------------------------------------------------------
 	// Save each header if the CSV file has headers
 	// -----------------------------------------------------------
-	if (*pHasHeaders)
+	if (pParams->hasHeaders)
 	{
 		// Buffer headers ---------------------------------------------
 		CharArr allHeaders;
-		int allHeadersBuffered = bufferHeaders(pfInput, &allHeaders);
+		int allHeadersBuffered = bufferHeaders(pParams->pfInput, &allHeaders);
 
 		if (allHeadersBuffered != SUCCESS)
 		{
@@ -34,7 +36,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 		}
 
 		IntArr numHeaderChars;
-		createIntArr(&numHeaderChars, *pNumCols);
+		createIntArr(&numHeaderChars, pParams->numCols);
 
 		if (!numHeaderChars.pData)
 		{
@@ -57,7 +59,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			// TODO: Eliminate header quotes
 			// ------------------------------------------------------------
 
-			if (allHeaders.pData[i] != *pDelimiter) numChar++;
+			if (allHeaders.pData[i] != pParams->delimiter) numChar++;
 			else {
 				addNewInt(&numHeaderChars, numChar);
 				numChar = 0;
@@ -67,18 +69,17 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	
 
 		// Get each header and store their address in *pppHeaderList
-		*pppHeaderList = (char**)malloc(*pNumCols * sizeof(char*));
-		if (!*pppHeaderList) {
+		pParams->ppHeaderList = (char**)malloc(pParams->numCols * sizeof(char*));
+		if (!pParams->ppHeaderList) {
 			return CSV_PARSING_ERROR;
 		}
 
 		int numAddedHeader = 0;
 		int iStart = 0;
-		for (int iHeader = 0; iHeader < *pNumCols; iHeader++) {
+		for (int iHeader = 0; iHeader < pParams->numCols; iHeader++) {
 			int sizeHeader = numHeaderChars.pData[iHeader];
-			
-			// +1 for null termination
-			char* header = (char*)malloc((sizeHeader + 1) * sizeof(char));
+
+			char* header = (char*)malloc((sizeHeader + 1) * sizeof(char)); // +1 for null termination
 			if (!header) {
 				return CSV_PARSING_ERROR;
 			}
@@ -88,13 +89,12 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 			}
 			header[sizeHeader] = '\0';
 
-			(*pppHeaderList)[numAddedHeader] = header;
+			(pParams->ppHeaderList)[numAddedHeader] = header;
 			numAddedHeader++;
 
-			// +1 to skip delimiter in allHeaders 
-			iStart += sizeHeader + 1;
-		}
 
+			iStart += sizeHeader + 1; // +1 to skip delimiter in allHeaders 
+		}
 		destroyIntArr(&numHeaderChars);
 		destroyCharArr(&allHeaders);
 	}
@@ -102,7 +102,7 @@ int parseCSV(FILE* pfInput, char* pDelimiter, int* pNumCols, int* pNumValueLines
 	return SUCCESS;
 }
 
-int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
+int validateData(Parameters* pParams)
 {
 	// -----------------------------------------------------------
 	// Count value and comment lines: DONE
@@ -113,8 +113,9 @@ int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNum
 	// Do all entries match these data types or null?
 	// -----------------------------------------------------------
 
-	countLines(pfInput, pDelimiter, pNumValueLines, pNumCommentLines, pHasHeaders);
-	int validNumEntries = eachLineHasSameNumCols(pfInput, pDelimiter, pNumCols);
+	countLines(pParams);
+	int validNumEntries = eachLineHasSameNumCols(pParams);
+#
 	if (validNumEntries != SUCCESS) {
 		printf("ERROR! Invalid number of entries at line %d\n", validNumEntries);
 		return CSV_PARSING_ERROR;
@@ -124,12 +125,12 @@ int validateData(FILE* pfInput, char* pDelimiter, const int* pNumCols, int* pNum
 	return SUCCESS;
 }
 
-void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNumCommentLines, bool* pHasHeaders)
+void countLines(Parameters* pParams)
 {
 	// Comment line specifiers: '//', '#'  
 	// if the file has headers go to next line
 	
-	rewind(pfInput);
+	rewind(pParams->pfInput);
 
 	int numValueLines = 1;
 	int numCommentLines = 0;
@@ -137,7 +138,7 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 	bool isPrevCharSlash = false;
 	bool isNewLine = true;
 
-	while ((cur = getc(pfInput)) != EOF)
+	while ((cur = getc(pParams->pfInput)) != EOF)
 	{
 		char curChar = (char)cur;
 		
@@ -166,31 +167,34 @@ void countLines(FILE * pfInput, char* pDelimiter, int* pNumValueLines, int* pNum
 			isPrevCharSlash = !isPrevCharSlash;
 		}
 	}
-	*pNumValueLines = numValueLines;
-	*pNumCommentLines = numCommentLines;
+
+	if (pParams->hasHeaders) numValueLines--;
+	pParams->numValueLines = numValueLines;
+	pParams->numCommentLines = numCommentLines;
+
 }
 
 // If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)
 // Else returns the first invalid line's order
-int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols)
+int eachLineHasSameNumCols(Parameters* pParams)
 {
-	rewind(pfInput);
+	rewind(pParams->pfInput);
 
 	int cur, numLineDelimiters = 0, curLine = 1;
 	bool isPrevCharSlash = 0;
 
-	while ((cur = getc(pfInput)) != EOF) {
+	while ((cur = getc(pParams->pfInput)) != EOF) {
 		char curChar = (char)cur;
 		
-		if (curChar == *pDelimiter) numLineDelimiters++;
+		if (curChar == pParams->delimiter) numLineDelimiters++;
 		
 		else if (curChar == '\n') {
-			if (numLineDelimiters + 1 < *pNumCols) return curLine;
+			if (numLineDelimiters + 1 < pParams->numCols) return curLine;
 			curLine++;
 			numLineDelimiters = 0;
 		}
 		
-		if (numLineDelimiters >= *pNumCols) return curLine;
+		if (numLineDelimiters >= pParams->numCols) return curLine;
 		
 
 		// TODO: skip comment lines
@@ -206,23 +210,23 @@ int eachLineHasSameNumCols(FILE* pfInput, char* pDelimiter, const int* pNumCols)
 	return SUCCESS;
 }
 
-void determineNumCols(FILE* pfInput, char* pDelimiter, int* pNumCols) {
+void determineNumCols(Parameters* pParams) {
 	int numDelimiters = 0;
 
 	int currentChar;
-	while ((currentChar = getc(pfInput)) != EOF)
+	while ((currentChar = getc(pParams->pfInput)) != EOF)
 	{
 		char strCh = (char)currentChar;
 
 		if (strCh == '\n')
 			break;
 
-		if (strCh == *pDelimiter)
+		if (strCh == pParams->delimiter)
 			numDelimiters++;
 	}
 
-	*pNumCols = numDelimiters + 1;
-	rewind(pfInput);
+	pParams->numCols = numDelimiters + 1;
+	rewind(pParams->pfInput);
 };
 
 int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
