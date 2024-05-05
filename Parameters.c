@@ -9,6 +9,7 @@ void initializeParameters(Parameters* pParams)
 	pParams->numCols = 0;
 	pParams->numValueLines = 0;
 	pParams->numCommentLines = 0;
+	pParams->numChars = 0;
 	pParams->ppHeaderList = NULL;
 }
 

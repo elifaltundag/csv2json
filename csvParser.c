@@ -113,7 +113,7 @@ int validateData(Parameters* pParams)
 	// Do all entries match these data types or null?
 	// -----------------------------------------------------------
 
-	countLines(pParams);
+	countParameters(pParams);
 	int validNumEntries = eachLineHasSameNumCols(pParams);
 #
 	if (validNumEntries != SUCCESS) {
@@ -125,15 +125,17 @@ int validateData(Parameters* pParams)
 	return SUCCESS;
 }
 
-void countLines(Parameters* pParams)
+void countParameters(Parameters* pParams)
 {
 	// Comment line specifiers: '//', '#'  
 	// if the file has headers go to next line
 	
 	rewind(pParams->pfInput);
 
+
 	int numValueLines = 1;
 	int numCommentLines = 0;
+	size_t numChars = 0;
 	int cur;
 	bool isPrevCharSlash = false;
 	bool isNewLine = true;
@@ -141,6 +143,7 @@ void countLines(Parameters* pParams)
 	while ((cur = getc(pParams->pfInput)) != EOF)
 	{
 		char curChar = (char)cur;
+		numChars++;
 		
 		if (curChar == '\n') {
 			numValueLines++;
@@ -171,7 +174,7 @@ void countLines(Parameters* pParams)
 	if (pParams->hasHeaders) numValueLines--;
 	pParams->numValueLines = numValueLines;
 	pParams->numCommentLines = numCommentLines;
-
+	pParams->numChars = numChars;
 }
 
 // If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)

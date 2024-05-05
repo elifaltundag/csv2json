@@ -6,7 +6,7 @@
 // Written
 void determineNumCols(Parameters* pParams);
 int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader);
-void countLines(Parameters* pParams);
+void countParameters(Parameters* pParams);
 int eachLineHasSameNumCols(Parameters* pParams);
 
 // Will be improved for edge cases
