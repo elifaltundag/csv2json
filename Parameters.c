@@ -4,7 +4,7 @@ void initializeParameters(Parameters* pParams)
 {
 	pParams->pfInput = NULL; 
 	pParams->pfOutput = NULL;
-	pParams->delimiter = ',';
+	pParams->delimiter = ','; // default delimiter: comma
 	pParams->hasHeaders = false;
 	pParams->numCols = 0;
 	pParams->numValueLines = 0;
