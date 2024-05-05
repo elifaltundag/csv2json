@@ -12,10 +12,17 @@
 
 int parseCSV(Parameters* pParams)
 {
-	determineNumCols(pParams);
-
-	if (validateData(pParams) != SUCCESS) return CSV_PARSING_ERROR;
+	// Save CSV file contents in a string and close input file
 	if (bufferCSVContents(pParams) != SUCCESS) return CSV_PARSING_ERROR;
+	
+	if (pParams->pfInput != NULL) {
+		fclose(pParams->pfInput);
+		pParams->pfInput = NULL;
+	}
+
+	determineNumCols(pParams);
+#if 0
+	if (validateData(pParams) != SUCCESS) return CSV_PARSING_ERROR;
 
 	// -----------------------------------------------------------
 	// Save each header if the CSV file has headers
@@ -95,21 +102,39 @@ int parseCSV(Parameters* pParams)
 		destroyCharArr(&allHeaders);
 	}
 	
+	determineNumLines(pParams);
+
+#endif
 	return SUCCESS;
 }
+
+void determineNumCols(Parameters* pParams) {
+	int numDelimiters = 0, i = 0;
+	char delimiter = pParams->delimiter;
+
+	while (i < pParams->numChars)
+	{
+		char curChar = pParams->csvContents[i];
+
+		if (curChar == '\n') break;
+		if (curChar == delimiter) numDelimiters++;
+		// if (strcmp(curChar, pParams->delimiter) == 0) numDelimiters++;
+
+		i++;
+	}
+
+	pParams->numCols = numDelimiters + 1;
+};
 
 int validateData(Parameters* pParams)
 {
 	// -----------------------------------------------------------
-	// Count value and comment lines: DONE
-	// Incorrect comma count per entry: DONE
-	// 
 	// TODO
 	// Get each data type: String || Number
 	// Do all entries match these data types or null?
 	// -----------------------------------------------------------
 
-	countParameters(pParams);
+	determineNumLines(pParams);
 	int validNumEntries = eachLineHasSameNumCols(pParams);
 #
 	if (validNumEntries != SUCCESS) {
@@ -121,23 +146,32 @@ int validateData(Parameters* pParams)
 	return SUCCESS;
 }
 
+
 int bufferCSVContents(Parameters* pParams)
 {
-
 	if (!pParams->pfInput) {
 		printf("ERROR: Cannot open CSV file\n");
 		return CSV_PARSING_ERROR;
 	}
 	rewind(pParams->pfInput);
 
-	pParams->csvContents = (char*)malloc((pParams->numChars + 1) * sizeof(char)); // +1 for null termination
+	// Count total number of characters in the CSV file
+	int cur, numChars = 0;
+	while ((cur = getc(pParams->pfInput)) != EOF) numChars++;
+	
+	pParams->numChars = numChars;
+
+	// Allocate memory
+	pParams->csvContents = (char*)malloc((numChars + 1) * sizeof(char)); // +1 for null termination
 	if (!pParams->csvContents) {
 		printf("Cannot allocate enough memory to buffer CSV contents\n");
 		return CSV_PARSING_ERROR;
 	}
 	
-	size_t numCharsRead = fread(pParams->csvContents, pParams->numChars, 1, pParams->pfInput);
-	pParams->csvContents[pParams->numChars] = '\0';
+	// Buffer CSV contents 
+	rewind(pParams->pfInput);
+	size_t numCharsRead = fread(pParams->csvContents, numChars, 1, pParams->pfInput);
+	pParams->csvContents[numChars] = '\0';
 	
 	
 	fclose(pParams->pfInput);
@@ -147,13 +181,13 @@ int bufferCSVContents(Parameters* pParams)
 	return SUCCESS;
 }
 
-void countParameters(Parameters* pParams)
+
+void determineNumLines(Parameters* pParams)
 {
 	// Comment line specifiers: '//', '#'  
 	// if the file has headers go to next line
 	
 	rewind(pParams->pfInput);
-
 
 	int numValueLines = 1;
 	int numCommentLines = 0;
@@ -201,6 +235,8 @@ void countParameters(Parameters* pParams)
 
 // If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)
 // Else returns the first invalid line's order
+
+
 int eachLineHasSameNumCols(Parameters* pParams)
 {
 	rewind(pParams->pfInput);
@@ -235,24 +271,6 @@ int eachLineHasSameNumCols(Parameters* pParams)
 	return SUCCESS;
 }
 
-void determineNumCols(Parameters* pParams) {
-	int numDelimiters = 0;
-
-	int currentChar;
-	while ((currentChar = getc(pParams->pfInput)) != EOF)
-	{
-		char strCh = (char)currentChar;
-
-		if (strCh == '\n')
-			break;
-
-		if (strCh == pParams->delimiter)
-			numDelimiters++;
-	}
-
-	pParams->numCols = numDelimiters + 1;
-	rewind(pParams->pfInput);
-};
 
 int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
 {
