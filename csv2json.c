@@ -10,8 +10,17 @@
 
 
 void closeFiles(Parameters* pParams) {
-	if (pParams->pfInput != NULL) fclose(pParams->pfInput);
-	if (pParams->pfOutput != NULL) fclose(pParams->pfOutput);
+	if (pParams->pfInput != NULL)
+	{
+		fclose(pParams->pfInput);
+		pParams->pfInput = NULL;
+	}
+	
+	if (pParams->pfOutput != NULL)
+	{
+		fclose(pParams->pfOutput);
+		pParams->pfOutput = NULL;
+	}
 }
 
 
