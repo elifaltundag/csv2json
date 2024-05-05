@@ -18,32 +18,30 @@ int main(int argc, char* argv[])
 
 	if (parseCommandLineParameters(argc, argv, pParams) != SUCCESS)
 	{
+		closeFiles(pParams);
 		return CMDLINE_PARSING_ERROR;
 	}
 
-	
-
-
 	if (parseCSV(pParams) != SUCCESS)
-	{								   
+	{							
+		closeFiles(pParams);
 		return CSV_PARSING_ERROR;	   
 	}
 
 #if 0
 	if (jsonWriter(pfOutput, pfInput, &delimiter, &numCols, &hasHeaders, &ppHeaderList))
 	{
+		closeFiles(pParams);
 		return JSON_WRITING_ERROR;
 	}
-
-	// FIX: If you cant parse CSV you dont close the files!!
-	if (pfInput != NULL) {
-		fclose(pfInput);
-	}
-
-	if (pfOutput != NULL) {
-		fclose(pfOutput);
-	}
 #endif
-		
+	
+	closeFiles(pParams);
 	return SUCCESS;
+}
+
+
+void closeFiles(Parameters* pParams) {
+	if (pParams->pfInput != NULL) fclose(pParams->pfInput);
+	if (pParams->pfOutput != NULL) fclose(pParams->pfOutput);
 }
