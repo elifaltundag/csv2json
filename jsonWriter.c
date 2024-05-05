@@ -25,6 +25,8 @@ int jsonWriter(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCols, b
 	return SUCCESS;
 }
 
+
+
 void printJSON(FILE* pfOutput)
 {
 	printf("\nCurrent JSON file contents:\n");
@@ -40,10 +42,10 @@ void printJSON(FILE* pfOutput)
 
 // -----------------------------------------------------------------
 // Example CSV input
-// John, 25, New York
-// Alice, 30, Los Angeles
-// Bob, 22, Chicago
-// Eve, 35, San Francisco
+// John,25,New York
+// Alice,30,Los Angeles
+// Bob,22,Chicago
+// Eve,35,San Francisco
 //
 // Expected JSON output: array of arrays
 // [
@@ -55,13 +57,17 @@ void printJSON(FILE* pfOutput)
 // 
 // WRITE:
 // [\n
-// John, 25, New York
+// John,25,New York
 // ^ isNewLine start value: true --> !isNewLine, write ["J
-//     ^ : delimiter --> write ", "
-//					 ^: \n --> isNewLine, write "],
 // 
-// Eve, 35, San Francisco
-//						 ^ EOF --> write "]\n]
+// John,25,New York
+//     ^ : delimiter --> write ", "
+// 
+// John,25,New York
+//				   ^: \n --> isNewLine, write "],
+// 
+// Eve,35,San Francisco
+//					   ^ EOF --> write "]\n]
 //
 // -----------------------------------------------------------------
 
@@ -111,12 +117,12 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 
 
 // -----------------------------------------------------------------
-// // Example CSV input
+// Example CSV input
 // Name,Age,Location
-// John, 25, New York
-// Alice, 30, Los Angeles
-// Bob, 22, Chicago
-// Eve, 35, San Francisco
+// John,25,New York
+// Alice,30,Los Angeles
+// Bob,22,Chicago
+// Eve,35,San Francisco
 // 
 // Expected JSON output: array of objects
 // [
@@ -145,20 +151,20 @@ int writeArrOfArrs(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
 // Name,Age,Location
 //					^ first \n: skip till here - open new object, write header[0] in quotes, colon : and open new quotes
 // 
-// John, 25, New York
+// John,25,New York
 // ^^^^ get each character
 // 
-// John, 25, New York
+// John,25,New York
 //	   ^ delimiter: close quotes, get to new entry, write header[1] in quotes, colon : and open new quotes
 // 
-// John, 25, New York
-//					 ^ newLine: close quotes, close object, reset iHeader = 0, open new object, write header[0] in quotes, colon : and open new quotes
+// John,25,New York
+//				   ^ newLine: close quotes, close object, reset iHeader = 0, open new object, write header[0] in quotes, colon : and open new quotes
 //  
 // 
-// Alice, 30, Los Angeles
-// Bob, 22, Chicago
-// Eve, 35, San Francisco
-//						 ^ EOF: close quotes, close object close arr
+// Alice,30,Los Angeles
+// Bob,22,Chicago
+// Eve,35,San Francisco
+//					   ^ EOF: close quotes, close object close arr
 // 
 // WRITE
 // [
@@ -230,6 +236,8 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 			continue;
 		}
 
+		
+
 		fprintf(pfOutput, "%c", curChar);
 	}
 
@@ -240,3 +248,43 @@ int writeArrOfObjs(FILE* pfOutput, FILE* pfInput, char* pDelimiter, int* pNumCol
 	return SUCCESS;
 }
 
+
+
+// -----------------------------------------------------------------
+// IRREGULAR COLUMNS
+// 
+// Example CSV input
+// Name,Age,Location
+// John,25,
+//		   ^^ : delimiter + new line
+// 
+// Alice,,Los Angeles
+//		^^ delimiter + delimiter
+//		
+// 
+// Expected JSON output: null where necessary
+// 
+// [
+//		{
+//			"Name": "John",
+//			"Age" : "25",
+//			"Location" : ""
+//		},
+//		{
+//			"Name": "Alice",
+//			"Age" : "",
+//			"Location" : "Los Angeles"
+//		}
+// ]
+// -----------------------------------------------------------------
+
+
+// if a new line or delimiter is followed by a delimiter, it is null 
+bool isEntryNull(FILE* pfOutput, FILE* pfInput, char* pDelimiter)
+{
+	bool isNull = false;
+
+
+
+	return isNull;
+}

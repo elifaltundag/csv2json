@@ -4,7 +4,8 @@
 #include "definitions.h"
 #include "commandLineParser.h"
 
-int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** ppfOutput, char* pDelimiter, bool* pHasHeaders)
+// int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** ppfOutput, char* pDelimiter, bool* pHasHeaders)
+int parseCommandLineParameters(int argc, char* argv[], Parameters* pParams)
 {
 	// No input or output path
 	if (argc == 1)
@@ -45,7 +46,7 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 			return displayExampleUsageQuit();
 		}
 
-		errno_t errInput  = fopen_s(ppfInput, argv[1], "r");
+		errno_t errInput  = fopen_s(&pParams->pfInput, argv[1], "r");
 		if (errInput != SUCCESS)
 		{
 			printf("ERROR! Invalid input path\n");
@@ -54,10 +55,10 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 
 		// w: opens to write only, if the file already exists its content is deleted 
 		// w+: opens to read+write, if the file already exists its content is deleted 
-		errno_t errOutput = fopen_s(ppfOutput, argv[2], "w+");
+		errno_t errOutput = fopen_s(&pParams->pfOutput, argv[2], "w+");
 		if (errOutput != SUCCESS)
 		{
-			fclose(*ppfInput);
+			fclose(pParams->pfInput);			
 			printf("ERROR! Invalid output path\n");
 			return displayExampleUsageQuit();
 		}
@@ -68,7 +69,7 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 
 	// Third argument: headers or delimiter
 	if (argc == 4) {
-		int arg3 = argHeadersOrDelimiter(argv[3], pDelimiter, pHasHeaders);
+		int arg3 = argHeadersOrDelimiter(argv[3], pParams);
 		
 		if (arg3 == DELIMITER || arg3 == HEADERS) return SUCCESS;
 	}
@@ -82,8 +83,8 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 	// argv[4]: headers, argv[3]: delimiter
 	// ... ; headers
 	if (argc == 5) {
-		int arg3 = argHeadersOrDelimiter(argv[3], pDelimiter, pHasHeaders);
-		int arg4 = argHeadersOrDelimiter(argv[4], pDelimiter, pHasHeaders);
+		int arg3 = argHeadersOrDelimiter(argv[3], pParams);
+		int arg4 = argHeadersOrDelimiter(argv[4], pParams);
 
 	if ((arg3 == HEADERS && arg4 == DELIMITER) || (arg3 == DELIMITER && arg4 == HEADERS)) return SUCCESS;
 
@@ -93,7 +94,7 @@ int parseCommandLineParameters(int argc, char* argv[], FILE** ppfInput, FILE** p
 	return displayExampleUsageQuit();
 }
 
-int argHeadersOrDelimiter(char* pArg, char* pDelimiter, bool* hasHeaders) {
+int argHeadersOrDelimiter(char* pArg, Parameters* pParams) {
 	// ASCII code Delimiter
 		//         44 , 
 		//         59 ;
@@ -101,13 +102,13 @@ int argHeadersOrDelimiter(char* pArg, char* pDelimiter, bool* hasHeaders) {
 		//        ??? \t // not yet added
 
 	if (*pArg == 44 || *pArg == 59 || *pArg == 124) {
-		*pDelimiter = *pArg;
-		printf("CSV delimiter: %c\n", *pDelimiter);
+		pParams->delimiter = *pArg;
+		printf("CSV delimiter: %c\n", pParams->delimiter);
 		return DELIMITER;
 	}
 
 	if (strcmp(pArg, "headers") == SUCCESS) {
-		*hasHeaders = true;
+		pParams->numCols = true;
 		printf("CSV file has headers\n");
 		return HEADERS;
 	}
