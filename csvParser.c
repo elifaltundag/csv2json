@@ -21,6 +21,8 @@ int parseCSV(Parameters* pParams)
 	}
 
 	determineNumCols(pParams);
+	determineNumLines(pParams);
+
 #if 0
 	if (validateData(pParams) != SUCCESS) return CSV_PARSING_ERROR;
 
@@ -102,20 +104,19 @@ int parseCSV(Parameters* pParams)
 		destroyCharArr(&allHeaders);
 	}
 	
-	determineNumLines(pParams);
-
 #endif
 	return SUCCESS;
 }
 
 void determineNumCols(Parameters* pParams) {
-	int numDelimiters = 0, i = 0;
+	int numDelimiters = 0;
+	int i = 0;
 	char delimiter = pParams->delimiter;
 
 	while (i < pParams->numChars)
 	{
-		i++;
 		char curChar = pParams->csvContents[i];
+		i++;
 
 		if (curChar == '\n') break;
 		if (curChar == delimiter) numDelimiters++;
@@ -123,6 +124,53 @@ void determineNumCols(Parameters* pParams) {
 
 	pParams->numCols = numDelimiters + 1;
 };
+
+void determineNumLines(Parameters* pParams)
+{
+	int numValueLines = 1; 
+	int numCommentLines = 0;
+	int i = 0;
+	bool isPrevCharSlash = false;
+	bool isNewLine = true;
+
+	while (i < pParams->numChars) 
+	{
+		char curChar = pParams->csvContents[i];
+		i++;
+
+		// Count new lines
+		if (curChar == '\n') {
+			numValueLines++;
+			isNewLine = true;
+		}
+
+		if (isNewLine && curChar != '\n') {
+			isNewLine = false;
+		}
+
+		// Count comment lines
+		// Comment line specifiers: '#', '//'  
+		else if (isNewLine && curChar == '#')
+		{
+			numValueLines--;
+			numCommentLines++;
+		}
+		else if (isPrevCharSlash && curChar == '/')
+		{
+			numValueLines--;
+			numCommentLines++;
+		}
+		else if (isNewLine && !isPrevCharSlash && curChar == '/')
+		{
+			isPrevCharSlash = !isPrevCharSlash;
+		}
+
+	}
+
+	if (pParams->hasHeaders) numValueLines--;
+	pParams->numValueLines = numValueLines;
+	pParams->numCommentLines = numCommentLines;
+}
 
 int validateData(Parameters* pParams)
 {
@@ -180,56 +228,6 @@ int bufferCSVContents(Parameters* pParams)
 }
 
 
-void determineNumLines(Parameters* pParams)
-{
-	// Comment line specifiers: '//', '#'  
-	// if the file has headers go to next line
-	
-	rewind(pParams->pfInput);
-
-	int numValueLines = 1;
-	int numCommentLines = 0;
-	size_t numChars = 0;
-	int cur;
-	bool isPrevCharSlash = false;
-	bool isNewLine = true;
-
-	while ((cur = getc(pParams->pfInput)) != EOF)
-	{
-		char curChar = (char)cur;
-		numChars++;
-		
-		if (curChar == '\n') {
-			numValueLines++;
-			isNewLine = true;
-		}
-
-		if (isNewLine && curChar != '\n') {
-			isNewLine = false;
-		}
-		
-		// Count comment lines
-		else if (isNewLine && curChar == '#') 
-		{
-			numValueLines--;
-			numCommentLines++;
-		} 
-		else if (isPrevCharSlash && curChar == '/')
-		{
-			numValueLines--;
-			numCommentLines++;
-		}
-		else if (isNewLine && !isPrevCharSlash && curChar == '/')
-		{
-			isPrevCharSlash = !isPrevCharSlash;
-		}
-	}
-
-	if (pParams->hasHeaders) numValueLines--;
-	pParams->numValueLines = numValueLines;
-	pParams->numCommentLines = numCommentLines;
-	pParams->numChars = numChars;
-}
 
 // If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)
 // Else returns the first invalid line's order
