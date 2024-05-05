@@ -99,7 +99,6 @@ int argHeadersOrDelimiter(char* pArg, Parameters* pParams) {
 		//         44 , 
 		//         59 ;
 		//        124 |	
-		//        ??? \t // not yet added
 
 	if (*pArg == 44 || *pArg == 59 || *pArg == 124) {
 		pParams->delimiter = *pArg;
@@ -108,7 +107,7 @@ int argHeadersOrDelimiter(char* pArg, Parameters* pParams) {
 	}
 
 	if (strcmp(pArg, "headers") == SUCCESS) {
-		pParams->numCols = true;
+		pParams->hasHeaders = true;
 		printf("CSV file has headers\n");
 		return HEADERS;
 	}
