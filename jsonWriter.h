@@ -7,8 +7,8 @@ bool isEntryNull(Parameters* pParams);
 
 // Done
 void printJSON(FILE* pfOutput);
-int writeArrOfArrs(Parameters* pParams);
-int writeArrOfObjs(Parameters* pParams);
+void generateArrOfArrs(Parameters* pParams);
+void generateArrOfObjs(Parameters* pParams);
 
 // To be written
 int generateJsonContents(Parameters* pParams);
