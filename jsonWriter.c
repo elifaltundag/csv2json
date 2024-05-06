@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "definitions.h"
 #include "Parameters.h"
@@ -8,9 +9,13 @@
 #include "jsonWriter.h"
 
 int jsonWriter(Parameters* pParams) {
-	if (pParams->pfInput == NULL) return JSON_WRITING_ERROR;
+	if (pParams->csvContents == NULL) return JSON_WRITING_ERROR;
 	if (pParams->pfOutput == NULL) return JSON_WRITING_ERROR;
 
+	generateJsonContents(pParams);
+	
+
+#if 0 
 	const char startJSON[] = "[";
 	const char endJSON[]   = "\n]";   
 	
@@ -22,24 +27,37 @@ int jsonWriter(Parameters* pParams) {
 	fprintf(pParams->pfOutput, "%s", endJSON);
 	
 	printJSON(pParams->pfOutput);
-
+#endif
 	return SUCCESS;
 }
 
 
-
-void printJSON(FILE* pfOutput)
+void generateJsonContents(Parameters* pParams)
 {
-	printf("\nCurrent JSON file contents:\n");
+	// Allocate memory
+	size_t numCharsDbl = 2 * pParams->numChars;
+	pParams->jsonContents = (char*)malloc(numCharsDbl * sizeof(char));
+	if (pParams->jsonContents == NULL) return JSON_WRITING_ERROR;
 
-	rewind(pfOutput);
-	int cur;
-	while ((cur = getc(pfOutput)) != EOF)
-	{
-		char curChar = (char)cur;
-		printf("%c", curChar);
-	}
+	// Add null terminated strings to jsonContents by concatenation
+	pParams->jsonContents[0] = '\0'; // must begin with null termination
+	strcat_s(pParams->jsonContents, numCharsDbl, "["); // start JSON
+
+
+
+
+	strcat_s(pParams->jsonContents, numCharsDbl, "\n]"); // end JSOn
+
+#if 0
+	// string concatenation 
+	size_t sStr1 = 10 * sizeof(char);
+	char* str1 = (char*)malloc(sStr1);
+	str1[0] = '\0'; 
+	char* str2 = "456";
+	strcat_s(str1, sStr1, str2);
+#endif
 }
+
 
 // -----------------------------------------------------------------
 // Example CSV input
@@ -251,6 +269,8 @@ int writeArrOfObjs(Parameters* pParams)
 
 
 
+
+
 // -----------------------------------------------------------------
 // IRREGULAR COLUMNS
 // 
@@ -289,4 +309,18 @@ bool isEntryNull(Parameters* pParams)
 
 
 	return isNull;
+}
+
+
+void printJSON(FILE* pfOutput)
+{
+	printf("\nCurrent JSON file contents:\n");
+
+	rewind(pfOutput);
+	int cur;
+	while ((cur = getc(pfOutput)) != EOF)
+	{
+		char curChar = (char)cur;
+		printf("%c", curChar);
+	}
 }

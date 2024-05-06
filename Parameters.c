@@ -12,6 +12,7 @@ void initializeParameters(Parameters* pParams)
 	
 	pParams->numChars = 0;
 	pParams->csvContents = NULL;
+	pParams->jsonContents = NULL;
 
 	pParams->numCols = 0;
 	pParams->numValueLines = 0;

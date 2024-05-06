@@ -15,6 +15,7 @@ typedef struct {
 	
 	size_t numChars;
 	char* csvContents;
+	char* jsonContents;
 
 	int numCols;
 	int numValueLines;
