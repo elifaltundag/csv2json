@@ -7,14 +7,18 @@
 typedef struct {
 	FILE* pfInput;
 	FILE* pfOutput;
-	char delimiter; // single character options: ',' ';' '|' ':' '\t'
+	
+	char delimiter; // single character options: ',' ';' '|' ':'
+	
 	bool hasHeaders;
+	char** ppHeaderList;
+	
+	size_t numChars;
+	char* csvContents;
+
 	int numCols;
 	int numValueLines;
 	int numCommentLines;
-	size_t numChars;
-	char* csvContents;
-	char** ppHeaderList;
 } Parameters;
 
 void initializeParameters(Parameters* pParams);
