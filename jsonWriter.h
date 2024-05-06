@@ -11,4 +11,4 @@ int writeArrOfArrs(Parameters* pParams);
 int writeArrOfObjs(Parameters* pParams);
 
 // To be written
-void generateJsonContents(Parameters* pParams);
+int generateJsonContents(Parameters* pParams);

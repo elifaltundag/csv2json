@@ -32,7 +32,7 @@ int jsonWriter(Parameters* pParams) {
 }
 
 
-void generateJsonContents(Parameters* pParams)
+int generateJsonContents(Parameters* pParams)
 {
 	// Allocate memory
 	size_t numCharsDbl = 2 * pParams->numChars;
@@ -43,19 +43,11 @@ void generateJsonContents(Parameters* pParams)
 	pParams->jsonContents[0] = '\0'; // must begin with null termination
 	strcat_s(pParams->jsonContents, numCharsDbl, "["); // start JSON
 
+	if (!pParams->hasHeaders) writeArrOfArrs(pParams);
 
+	strcat_s(pParams->jsonContents, numCharsDbl, "\n]"); // end JSON
 
-
-	strcat_s(pParams->jsonContents, numCharsDbl, "\n]"); // end JSOn
-
-#if 0
-	// string concatenation 
-	size_t sStr1 = 10 * sizeof(char);
-	char* str1 = (char*)malloc(sStr1);
-	str1[0] = '\0'; 
-	char* str2 = "456";
-	strcat_s(str1, sStr1, str2);
-#endif
+	return SUCCESS;
 }
 
 
@@ -90,46 +82,49 @@ void generateJsonContents(Parameters* pParams)
 //
 // -----------------------------------------------------------------
 
-int writeArrOfArrs(Parameters* pParams)
+void generateArrOfArrs(Parameters* pParams)
 {
-	const char arrOpening[] = "\n\t[\""; // tab + ["
-	const char arrClosing[] = "\"]";   // "] 
-	const char newElm[] = "\", \"";    // ", "
+	const char arrOpening[] = "\n\t[ \""; // tab + ["
+	const char arrClosing[] = "\" ]";     // "] 
+	const char newElm[] = "\", \"";      // ", "
 	
-	rewind(pParams->pfInput);
-
+	int i = 0;
+	char delimiter = pParams->delimiter;
 	bool isNewLine = true;
-	int cur;
-	int numTabs = 1;
+	size_t bufferSize = 2 * pParams->numChars;
 
-	while ((cur = getc(pParams->pfInput)) != EOF) {
-		char curChar = (char) cur;
+	while (i < pParams->numChars) {
+		char curChar = (pParams->csvContents)[i];
+		i++;
 
+		// if curChar == delimiter: add that with newElm
 		// if isNewLine: open array, switch isNewLine 
-		// if \n: close array, switch isNewLine
-		// if delimiter: add that
+		// if curChar == \n: close array, switch isNewLine
+		// no conditions met: concantenate curChar
+		
+		if (isNewLine) {
+			strcat_s(pParams->jsonContents, bufferSize, arrOpening);
+			isNewLine = false;
+			// continue;
+		}
 
-		if (curChar == pParams->delimiter) {
-			fprintf(pParams->pfOutput, "%s", newElm);
+		if (curChar == delimiter) {
+			strcat_s(pParams->jsonContents, bufferSize, newElm);
 			continue;
 		}
 
-		if (isNewLine) {
-			fprintf(pParams->pfOutput, "%s", arrOpening);
-			isNewLine = false;
-		}
-
 		if (curChar == '\n') {
-			fprintf(pParams->pfOutput, "%s,", arrClosing);
+			strcat_s(pParams->jsonContents, bufferSize, arrClosing);
+			strcat_s(pParams->jsonContents, bufferSize, ",");
 			isNewLine = true;
 			continue;
 		}
 
-		fprintf(pParams->pfOutput, "%c", curChar);
+		char curCharNullTerm[] = { curChar, '\0' };
+		strcat_s(pParams->jsonContents, bufferSize, curCharNullTerm);
 	}
-	
-	fprintf(pParams->pfOutput, "%s", arrClosing);
 
+	strcat_s(pParams->jsonContents, bufferSize, arrClosing);
 
 	return SUCCESS;
 }
@@ -210,7 +205,7 @@ int writeArrOfArrs(Parameters* pParams)
 // \n] 
 // -----------------------------------------------------------------
 
-int writeArrOfObjs(Parameters* pParams)
+void generateArrOfObjs(Parameters* pParams)
 {
 	const char objOpening[] = "\n\t{\n"; 
 	const char objClosing[] = "\n\t}"; 
@@ -266,8 +261,6 @@ int writeArrOfObjs(Parameters* pParams)
 
 	return SUCCESS;
 }
-
-
 
 
 
