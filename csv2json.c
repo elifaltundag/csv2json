@@ -38,6 +38,23 @@ int main(int argc, char* argv[])
 
 	if (parseCSV(pParams) != SUCCESS)
 	{							
+		if (!pParams->headers) {
+			free(pParams->headers);
+			pParams->headers = NULL;
+		}
+		
+		if (!pParams->ppHeaderList) 
+		{
+			free(pParams->ppHeaderList);
+			pParams->ppHeaderList = NULL;
+		}
+
+		if (!pParams->csvContents) {
+			free(pParams->csvContents);
+			pParams->csvContents = NULL;
+		}
+		
+		
 		closeFiles(pParams);
 		return CSV_PARSING_ERROR;	   
 	}
@@ -45,10 +62,51 @@ int main(int argc, char* argv[])
 
 	if (jsonWriter(pParams) != SUCCESS)
 	{
+		if (!pParams->headers) {
+			free(pParams->headers);
+			pParams->headers = NULL;
+		}
+
+		if (!pParams->ppHeaderList)
+		{
+			free(pParams->ppHeaderList);
+			pParams->ppHeaderList = NULL;
+		}
+
+		if (!pParams->csvContents) {
+			free(pParams->csvContents);
+			pParams->csvContents = NULL;
+		}
+
+		if (!pParams->jsonContents) {
+			free(pParams->jsonContents);
+			pParams->jsonContents = NULL;
+		}
+		
 		closeFiles(pParams);
 		return JSON_WRITING_ERROR;
 	}
 
+	if (!pParams->headers) {
+		free(pParams->headers);
+		pParams->headers = NULL;
+	}
+
+	if (!pParams->ppHeaderList)
+	{
+		free(pParams->ppHeaderList);
+		pParams->ppHeaderList = NULL;
+	}
+
+	if (!pParams->csvContents) {
+		free(pParams->csvContents);
+		pParams->csvContents = NULL;
+	}
+
+	if (!pParams->jsonContents) {
+		free(pParams->jsonContents);
+		pParams->jsonContents = NULL;
+	}
 	
 	closeFiles(pParams);
 	return SUCCESS;
