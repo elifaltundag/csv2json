@@ -11,6 +11,7 @@ typedef struct {
 	char delimiter; // single character options: ',' ';' '|' ':'
 	
 	bool hasHeaders;
+	char* headers;
 	char** ppHeaderList;
 	
 	size_t numChars;

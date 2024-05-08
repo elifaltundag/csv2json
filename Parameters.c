@@ -8,6 +8,7 @@ void initializeParameters(Parameters* pParams)
 	pParams->delimiter = ','; // default delimiter: comma
 
 	pParams->hasHeaders = false;
+	pParams->headers = NULL;
 	pParams->ppHeaderList = NULL;
 	
 	pParams->numChars = 0;
