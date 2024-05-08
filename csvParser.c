@@ -24,87 +24,62 @@ int parseCSV(Parameters* pParams)
 	determineNumLines(pParams);
 
 	if (validateData(pParams) != SUCCESS) return CSV_PARSING_ERROR;
-#if 0
-
-	// -----------------------------------------------------------
-	// Save each header if the CSV file has headers
-	// -----------------------------------------------------------
-	if (pParams->hasHeaders)
-	{
-		// Buffer headers ---------------------------------------------
-		CharArr allHeaders;
-		int allHeadersBuffered = bufferHeaders(pParams->pfInput, &allHeaders);
-
-		if (allHeadersBuffered != SUCCESS)
-		{
-			return CSV_PARSING_ERROR;
-		}
-
-		IntArr numHeaderChars;
-		createIntArr(&numHeaderChars, pParams->numCols);
-
-		if (!numHeaderChars.pData)
-		{
-			destroyIntArr(&numHeaderChars);
-			return CSV_PARSING_ERROR;
-		}
-
-		// Get each header separately ---------------------------------
-		// 1. Get each title's length: assign it in numHeaderChars
-		// 2. Create numCols many char*
-		// 3. Each char* has the corresponding size (step 1)
-		// 4. Add each char*'s address to *pppHeaderList
-		// 5. Destroy numHeaderChars
-		// 6. Destroy headers 
-		int numChar = 0;
-		
-		for (size_t i = 0; i < allHeaders.capacity; ++i)
-		{
-			// ------------------------------------------------------------
-			// TODO: Eliminate header quotes
-			// ------------------------------------------------------------
-
-			if (allHeaders.pData[i] != pParams->delimiter) numChar++;
-			else {
-				addNewInt(&numHeaderChars, numChar);
-				numChar = 0;
-			}
-		}
-		addNewInt(&numHeaderChars, numChar);
 	
+	if (pParams->hasHeaders) {
+		if (bufferHeaders(pParams) != SUCCESS) return CSV_PARSING_ERROR;
 
-		// Get each header and store their address in *pppHeaderList
+		// Allocate memory for each headers address
 		pParams->ppHeaderList = (char**)malloc(pParams->numCols * sizeof(char*));
-		if (!pParams->ppHeaderList) {
-			return CSV_PARSING_ERROR;
-		}
+		if (!pParams->ppHeaderList) return CSV_PARSING_ERROR;
 
-		int numAddedHeader = 0;
-		int iStart = 0;
-		for (int iHeader = 0; iHeader < pParams->numCols; iHeader++) {
-			int sizeHeader = numHeaderChars.pData[iHeader];
-
-			char* header = (char*)malloc((sizeHeader + 1) * sizeof(char)); // +1 for null termination
-			if (!header) {
-				return CSV_PARSING_ERROR;
+		int iHeader = 0;
+		char* pDelimiter = &pParams->delimiter;
+		char* token = NULL;
+		char* next_token = NULL; // WHY?? 
+			
+		if (pParams->headers != NULL) {
+			token = strtok_s(pParams->headers, pDelimiter, &next_token);
+			while (token != NULL) {
+				(pParams->ppHeaderList)[iHeader] = token;
+				token = strtok_s(NULL, pDelimiter, &next_token);
+				iHeader++;
 			}
-
-			for (int i = 0; i < sizeHeader; i++) {
-				header[i] = allHeaders.pData[i + iStart];
-			}
-			header[sizeHeader] = '\0';
-
-			(pParams->ppHeaderList)[numAddedHeader] = header;
-			numAddedHeader++;
-
-
-			iStart += sizeHeader + 1; // +1 to skip delimiter in allHeaders 
 		}
-		destroyIntArr(&numHeaderChars);
-		destroyCharArr(&allHeaders);
 	}
-	
-#endif
+	return SUCCESS;
+}
+
+int bufferCSVContents(Parameters* pParams)
+{
+	if (!pParams->pfInput) {
+		printf("ERROR: Cannot open CSV file\n");
+		return CSV_PARSING_ERROR;
+	}
+	rewind(pParams->pfInput);
+
+	// Count total number of characters in the CSV file
+	int cur, numChars = 0;
+	while ((cur = getc(pParams->pfInput)) != EOF) numChars++;
+
+	pParams->numChars = numChars;
+
+	// Allocate memory
+	pParams->csvContents = (char*)malloc((numChars + 1) * sizeof(char)); // +1 for null termination
+	if (!pParams->csvContents) {
+		printf("Cannot allocate enough memory to buffer CSV contents\n");
+		return CSV_PARSING_ERROR;
+	}
+
+	// Buffer CSV contents 
+	rewind(pParams->pfInput);
+	size_t numCharsRead = fread(pParams->csvContents, numChars, 1, pParams->pfInput);
+	pParams->csvContents[numChars] = '\0';
+
+
+	fclose(pParams->pfInput);
+	pParams->pfInput = NULL;
+
+
 	return SUCCESS;
 }
 
@@ -191,57 +166,8 @@ int validateData(Parameters* pParams)
 }
 
 
-int bufferCSVContents(Parameters* pParams)
-{
-	if (!pParams->pfInput) {
-		printf("ERROR: Cannot open CSV file\n");
-		return CSV_PARSING_ERROR;
-	}
-	rewind(pParams->pfInput);
-
-	// Count total number of characters in the CSV file
-	int cur, numChars = 0;
-	while ((cur = getc(pParams->pfInput)) != EOF) numChars++;
-	
-	pParams->numChars = numChars;
-
-	// Allocate memory
-	pParams->csvContents = (char*)malloc((numChars + 1) * sizeof(char)); // +1 for null termination
-	if (!pParams->csvContents) {
-		printf("Cannot allocate enough memory to buffer CSV contents\n");
-		return CSV_PARSING_ERROR;
-	}
-	
-	// Buffer CSV contents 
-	rewind(pParams->pfInput);
-	size_t numCharsRead = fread(pParams->csvContents, numChars, 1, pParams->pfInput);
-	pParams->csvContents[numChars] = '\0';
-	
-	
-	fclose(pParams->pfInput);
-	pParams->pfInput = NULL;
-
-	
-	return SUCCESS;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 // If each non-comment line has the same number of entries (columns) as pNumCol returns 0 (SUCCESS)
 // Else returns the first invalid line's order
-
-
-
 int eachLineHasSameNumCols(Parameters* pParams)
 {
 	int numLineDelimiters = 0;
@@ -276,47 +202,33 @@ int eachLineHasSameNumCols(Parameters* pParams)
 }
 
 
-int bufferHeaders(FILE* pfInput, CharArr* pArrBufferHeader)
+int bufferHeaders(Parameters* pParams)
 {
-	if (!pfInput)
-	{
-		printf("ERROR: Cannot open CSV file\n");
-		return CSV_PARSING_ERROR;
-	}
-	rewind(pfInput);
-
 	// Get number of characters of the first line of CSV file as size of buffer (char array)
 	size_t numCharsHeader = 0;
-	int ch;
+	int i = 0;
 
-	while ((ch = getc(pfInput)) != EOF)
-	{
-		char curCh = (char)ch;
-		if (curCh == '\n') break;
-		if (curCh == '\"') continue;
+	while (i < pParams->numChars) {
+		char curChar = (pParams->csvContents)[i];
+		i++;
+
+		if (curChar == '\n') break;
 		numCharsHeader++;
 	}
  
-	// +1 for null termination
-	createCharArr(pArrBufferHeader, numCharsHeader + 1);
+	// Buffer headers as a whole string
+	pParams->headers = (char*)malloc((numCharsHeader + 1) * sizeof(char)); // +1 for null termination
+	if (!pParams->headers) return CSV_PARSING_ERROR;
 
 	// Buffer headers 
-	rewind(pfInput);
-	size_t numCharsRead = fread(pArrBufferHeader->pData, sizeof(char), pArrBufferHeader->capacity - 1, pfInput);
-	pArrBufferHeader->size = numCharsRead;
-	
-	pArrBufferHeader->pData[pArrBufferHeader->size] = '\0';
-	pArrBufferHeader->size++;
-	// ------------------------------------------------------------------------
-	// Current file position indicator: at the beginning of the second line
-	// ------------------------------------------------------------------------
-	
-	if (numCharsRead + 1 != pArrBufferHeader->size)
-	{
-		printf("ERROR: Cannot buffer header!\n");
-		return CSV_PARSING_ERROR;
+	i = 0;
+	while (i < numCharsHeader) {
+		pParams->headers[i] = (pParams->csvContents)[i];
+		i++;
 	}
+	pParams->headers[numCharsHeader] = '\0';
 
+	
 	return SUCCESS;
 }
 
