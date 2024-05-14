@@ -13,7 +13,7 @@ int jsonWriter(Parameters* pParams) {
 	if (pParams->pfOutput == NULL) return JSON_WRITING_ERROR;
 
 	generateJsonContents(pParams);
-	
+	fputs(pParams->jsonContents, pParams->pfOutput);
 
 #if 0 
 	const char startJSON[] = "[";
@@ -43,7 +43,7 @@ int generateJsonContents(Parameters* pParams)
 	pParams->jsonContents[0] = '\0'; // must begin with null termination
 	strcat_s(pParams->jsonContents, numCharsDbl, "["); // start JSON
 
-	if (!pParams->hasHeaders) writeArrOfArrs(pParams);
+	if (!pParams->hasHeaders) generateArrOfArrs(pParams);
 
 	strcat_s(pParams->jsonContents, numCharsDbl, "\n]"); // end JSON
 
@@ -126,7 +126,7 @@ void generateArrOfArrs(Parameters* pParams)
 
 	strcat_s(pParams->jsonContents, bufferSize, arrClosing);
 
-	return SUCCESS;
+	// return SUCCESS;
 }
 
 
@@ -213,24 +213,35 @@ void generateArrOfObjs(Parameters* pParams)
 	const char quotes[] = "\"";
 
 	bool isFirstLine = true; 
-	int cur; 
 	int iHeader = 0;
+	int i = 0;
 
+	while (i < pParams->numCols) {
+		char curChar = pParams->csvContents[i];
+		i++;
+	}
+
+#if 0
 	while ((cur = getc(pParams->pfInput)) != EOF) {
 		char curChar = (char) cur;
 		
 		if (curChar == '\n') {
+			// Getting to new line & iHeader = numCols --> open quotes
 			if (pParams->numCols = iHeader) {
 				fprintf(pParams->pfOutput, "%s", quotes);
 			}
 
+			// Getting to a value line --> close object
 			if (!isFirstLine) {
 				fprintf(pParams->pfOutput, "%s,", objClosing);
 			} 
+
+			// Finished getting chars of the first line = headers
 			else {
 				isFirstLine = false;
 			}
 			
+			// Getting to a new line --> start new object 
 			fprintf(pParams->pfOutput, "%s", objOpening);
 
 			// Write first header
@@ -244,6 +255,9 @@ void generateArrOfObjs(Parameters* pParams)
 		// Skip the first line
 		if (isFirstLine) continue;
 
+		// Delimiter --> ", new line tab tab "header[iHeader]": " 
+		//                                      ...", 
+		//			"header[iHeader]": "...
 		if (curChar == pParams->delimiter) {
 			fprintf(pParams->pfOutput, "%s,\n\t\t%s%s%s: %s", quotes, quotes, (pParams->ppHeaderList)[iHeader], quotes, quotes);
 			iHeader++;
@@ -254,12 +268,11 @@ void generateArrOfObjs(Parameters* pParams)
 
 		fprintf(pParams->pfOutput, "%c", curChar);
 	}
+#endif
 
 	fprintf(pParams->pfOutput, "%s%s", quotes, objClosing);
 
-	rewind(pParams->pfInput);
-
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 
